@@ -1,0 +1,14 @@
+node_modules
+dist
+charting/work
+__pycache__
+e2e/out
+e2e-vite.log
+.venv
+
+# Copyrighted material stays local: song audio and full lyric text.
+public/levels/*/audio@*.ogg
+public/levels/*/vocals-env.json
+public/levels/*/chart*.json
+public/levels/local.json
+charting/legacy/lyrics/
