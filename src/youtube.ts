@@ -98,7 +98,7 @@ async function prepare(ref: YouTubeRef, startSec: number, rate: number, volume: 
     const timer = setInterval(() => {
       if (isSong()) return finish();
       if (performance.now() - started > 8000 && p.getPlayerState() !== PLAYING) {
-        setMode("prep", "Click the video to start it.  Esc to go back");
+        setMode("prep", "Waiting for the song… If an ad is playing, it starts right after. If nothing's playing, click the video.  Esc to go back");
       }
     }, 100);
     const onKey = (e: KeyboardEvent) => {

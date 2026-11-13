@@ -141,6 +141,7 @@ export async function loadLevel(id: string): Promise<Level> {
 
 /** Levels whose audio files exist locally (written by scripts/levels.ts; not part of the release). */
 export async function loadLocalIds(): Promise<Set<string>> {
+  if (!import.meta.env?.DEV) return new Set(); // the release has no local audio
   try {
     const r = await fetch("levels/local.json", { cache: "no-store" });
     if (!r.ok || !(r.headers.get("content-type") ?? "").includes("json")) return new Set();
