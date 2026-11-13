@@ -238,7 +238,9 @@ def main():
         rows.append((name, lid, rec["id"], f"{dur:.0f}s", str(n), "; ".join(notes) or "ok"))
         print(f"[{i}/{len(files)}] {name} -> {lid} (LRCLIB #{rec['id']} by {how}, {n} lines){'  !! ' + '; '.join(notes) if notes else ''}")
         if not a.dry_run:
-            write_chart(lid, shown_title, (m and m["artist"]) or rec.get("artistName") or artist, dur, rec, quiet=True)
+            yt = {"id": m["youtubeId"], "offsetMs": 0, "duration": m.get("youtubeDuration") or round(dur)} \
+                if m and m.get("youtubeId") else None  # the manifest's audio was downloaded from this video
+            write_chart(lid, shown_title, (m and m["artist"]) or rec.get("artistName") or artist, dur, rec, quiet=True, youtube=yt)
             jobs.append((f, os.path.join(ROOT, lid), lid))
 
     if jobs:

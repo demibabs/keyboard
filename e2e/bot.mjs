@@ -1,5 +1,5 @@
 // E2E: a bot plays a level by typing at the charted times, then we check the results and grab screenshots.
-// usage: node e2e/bot.mjs [speed=1.5] [jitterMs=0]   (needs `npx vite` running on :5173)
+// usage: [YT=1] node e2e/bot.mjs [speed=1.5] [jitterMs=0]   (needs `npx vite` running on :5173; YT=1 plays the YouTube video)
 import { chromium } from "playwright";
 import fs from "node:fs";
 const speed = Number(process.argv[2] ?? 1.5);
@@ -13,12 +13,12 @@ page.on("console", (m) => { if (m.type() === "error") console.log("console:", m.
 page.on("pageerror", (e) => console.log("pageerror:", e.message));
 await page.goto("http://localhost:5173/");
 await page.waitForSelector(".song-card");
-await page.evaluate((s) => localStorage.setItem("lyric-typer:settings", JSON.stringify({ speed: s, audioOffsetMs: 0, visualOffsetMs: 0, levelId: "twilight-zone", volume: 0.8 })), speed);
+await page.evaluate(([s, src]) => localStorage.setItem("keyboard:settings", JSON.stringify({ speed: s, audioOffsetMs: 0, visualOffsetMs: 0, levelId: "twilight-zone", volume: 0.8, audioSource: src })), [speed, process.env.YT ? "youtube" : "local"]);
 await page.reload();
 await page.waitForSelector(".song-card");
 await page.screenshot({ path: "e2e/out/select.png" });
 await page.keyboard.press("Enter");
-await page.waitForFunction(() => (window).__play);
+await page.waitForFunction(() => (window).__play, null, { timeout: 90000 });
 // skip the intro, then let the in-page bot type
 await page.waitForTimeout(500);
 await page.evaluate(() => (window).__play.skip());

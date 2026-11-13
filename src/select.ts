@@ -1,16 +1,24 @@
-import { difficulty, flatten, loadChart, loadLevelIds, type Chart } from "./chart";
+import { difficulty, flatten, loadLevelIds, type Chart } from "./chart";
+import { loadLevel, loadLocalIds, loadLyrics, skeleton, type Level } from "./lyrics";
 import { h, fmtScore, pct, tier } from "./dom";
 import { go, type Screen } from "./main";
 import { getBest, settings, saveSettings } from "./settings";
-import { playScreen } from "./play";
+import { messageScreen, playScreen, type AudioSource } from "./play";
 import { calibrateScreen } from "./calibrate";
 import { editorScreen } from "./editor";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5];
 
 export async function selectScreen(): Promise<Screen> {
-  const ids = await loadLevelIds();
-  const charts: Chart[] = await Promise.all(ids.map(loadChart));
+  const [ids, local] = await Promise.all([loadLevelIds(), loadLocalIds()]);
+  const levels: Level[] = await Promise.all(ids.map(loadLevel));
+  const charts: Chart[] = levels.map(skeleton); // placeholder text: lyrics are fetched when a song is played
+  /** where a level's audio comes from: local files (dev) or the YouTube video */
+  const sourceOf = (i: number): AudioSource | null => {
+    const hasLocal = local.has(levels[i].id), hasYt = !!levels[i].youtube;
+    if (hasLocal && hasYt) return settings.audioSource;
+    return hasLocal ? "local" : hasYt ? "youtube" : null;
+  };
   let sel = Math.max(0, charts.findIndex((c) => c.id === settings.levelId));
   if (!SPEEDS.includes(settings.speed)) settings.speed = 0.75;
 
@@ -20,11 +28,12 @@ export async function selectScreen(): Promise<Screen> {
 
   const el = h("div", { class: "select" },
     h("header", { class: "brand" },
-      h("h1", {}, "Lyric", h("span", {}, "Typer")),
+      h("h1", {}, "Key", h("span", {}, "board")),
       h("p", {}, "Type every lyric the moment it's sung.")),
     h("main", { class: "select-main" }, list, detail),
     h("footer", { class: "keys" },
-      key("↑↓", "song"), key("←→", "speed"), key("Enter", "play"), key("C", "calibrate"), key("E", "chart editor")),
+      key("↑↓", "song"), key("←→", "speed"), key("Enter", "play"), key("C", "calibrate"),
+      ...(local.size ? [key("A", "audio source"), key("E", "chart editor")] : [])),
   );
 
   function render() {
@@ -60,6 +69,7 @@ export async function selectScreen(): Promise<Screen> {
         stat("Hardest line", `${diff.burst} WPM`),
         stat("Length", `${Math.floor(c.duration / settings.speed / 60)}:${String(Math.round(c.duration / settings.speed % 60)).padStart(2, "0")}`),
         stat("Lines", String(flatten(c).lines.length)),
+        stat("Audio", sourceLabel(sourceOf(sel))),
         stat("Best", best ? `${fmtScore(best.score)} · ${best.grade}${best.fc ? " · all clean" : ""} · ${pct(best.accuracy)}` : "—"),
       ),
       h("button", { class: "play-btn", onclick: play }, "Play"),
@@ -68,11 +78,24 @@ export async function selectScreen(): Promise<Screen> {
   }
 
   function play() {
-    const c = charts[sel];
-    if (!c) return;
-    settings.levelId = c.id;
+    const level = levels[sel];
+    const source = sourceOf(sel);
+    if (!level || !source) return;
+    settings.levelId = level.id;
     saveSettings();
-    go(() => playScreen(c, settings.speed));
+    const speed = settings.speed;
+    go(async () => {
+      let chart: Chart;
+      try { chart = await loadLyrics(level); } catch (err) {
+        return messageScreen("Couldn't load the lyrics", err instanceof Error ? err.message : String(err));
+      }
+      return playScreen(chart, speed, source);
+    });
+  }
+  function edit() {
+    const level = levels[sel];
+    if (!level || !local.has(level.id)) return; // the editor needs the local audio (waveform)
+    go(async () => editorScreen(await loadLyrics(level)));
   }
 
   render();
@@ -90,11 +113,18 @@ export async function selectScreen(): Promise<Screen> {
         saveSettings(); render(); e.preventDefault();
       } else if (k === "Enter") { play(); e.preventDefault(); }
       else if (k.toLowerCase() === "c") go(() => calibrateScreen());
-      else if (k.toLowerCase() === "e" && charts[sel]) go(() => editorScreen(charts[sel]));
+      else if (k.toLowerCase() === "e") edit();
+      else if (k.toLowerCase() === "a" && local.size) {
+        settings.audioSource = settings.audioSource === "local" ? "youtube" : "local";
+        saveSettings(); render();
+      }
     },
   };
 }
 
+function sourceLabel(s: AudioSource | null): string {
+  return s === "local" ? "Local file" : s === "youtube" ? "YouTube" : "Not available";
+}
 function key(k: string, label: string) {
   return h("span", {}, h("kbd", {}, k), " ", label);
 }

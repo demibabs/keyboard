@@ -1,6 +1,7 @@
 import { audioUrl, type Chart } from "./chart";
 import { Engine, type EngineEvent } from "./engine";
-import { Player, loadBuffer } from "./audio";
+import { Player, loadBuffer, type GamePlayer } from "./audio";
+import { Cancelled, YouTubePlayer } from "./youtube";
 import { h, fmtScore, pct } from "./dom";
 import { go, type Screen } from "./main";
 import { settings } from "./settings";
@@ -17,12 +18,34 @@ interface LineView {
   chars: Map<number, HTMLElement>; // char index -> span
 }
 
-export async function playScreen(chart: Chart, speed: number): Promise<Screen> {
-  const buffer = await loadBuffer(audioUrl(chart, speed));
+export type AudioSource = "local" | "youtube";
+
+/** A screen with a message and a way back to the song list (for errors). */
+export function messageScreen(title: string, body: string): Screen {
+  return {
+    el: h("div", { class: "message" }, h("div", { class: "panel" }, h("h2", {}, title), h("p", {}, body),
+      h("p", { class: "keys" }, h("kbd", {}, "Enter"), " back to songs"))),
+    onKey(e) { if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); go(() => selectScreen()); } },
+  };
+}
+
+export async function playScreen(chart: Chart, speed: number, source: AudioSource): Promise<Screen> {
   const engine = new Engine(chart, speed);
-  const player = new Player(buffer, settings.volume);
   const lines = engine.lines;
   const aOff = settings.audioOffsetMs / 1000;
+  // lead in only if the first line starts within LEAD_IN seconds
+  const startFrom = Math.min(0, (lines.length ? engine.onset(0) : 0) + aOff - LEAD_IN);
+  let player: GamePlayer;
+  if (source === "youtube" && chart.youtube) {
+    try {
+      player = await YouTubePlayer.open(chart.youtube, speed, chart.duration / speed, settings.volume, startFrom);
+    } catch (err) {
+      if (err instanceof Cancelled) return selectScreen();
+      return messageScreen("Couldn't play the video", err instanceof Error ? err.message : String(err));
+    }
+  } else {
+    player = new Player(await loadBuffer(audioUrl(chart, speed)), settings.volume);
+  }
   const vOff = (settings.audioOffsetMs - settings.visualOffsetMs) / 1000;
   const judgeNow = () => player.time() - aOff;
   const visNow = () => player.time() - vOff;
@@ -40,6 +63,7 @@ export async function playScreen(chart: Chart, speed: number): Promise<Screen> {
   const nextSlot = h("div", { class: "slot next" }, nextTag, nextLine);
   const ready = h("div", { class: "ready hidden" }, h("div", { class: "ready-bar" }), h("span", { class: "ready-text" }));
   const hint = h("div", { class: "play-hint" });
+  const note = chart.note ? h("div", { class: "play-note" }, chart.note) : "";
   const progress = h("div", { class: "progress-fill" });
   const timeEl = h("span", { class: "time" });
   const pauseMenu = h("div", { class: "overlay hidden" },
@@ -53,6 +77,7 @@ export async function playScreen(chart: Chart, speed: number): Promise<Screen> {
         h("div", { class: "hud-title" }, chart.title),
         h("div", { class: "hud-sub" }, `${chart.artist} · ${speed}×`)),
       h("div", { class: "hud-right" }, scoreEl, h("div", { class: "hud-row" }, linesEl, accEl))),
+    note,
     h("main", { class: "stage" }, prevSlot, h("div", { class: "cur-wrap" }, ready, curSlot, lineTimer), nextSlot, hint),
     h("footer", { class: "play-foot" }, h("div", { class: "progress" }, progress), timeEl),
     pauseMenu,
@@ -154,7 +179,6 @@ export async function playScreen(chart: Chart, speed: number): Promise<Screen> {
   let done = false;
   let shownScore = 0;
   let lastPos = -1;
-  const firstOnset = lines.length ? engine.onset(0) : 0;
   const lastDeadline = lines.length ? engine.deadline(lines.length - 1) : 0;
 
   function frame() {
@@ -250,7 +274,7 @@ export async function playScreen(chart: Chart, speed: number): Promise<Screen> {
     done = true;
     engine.update(Infinity);
     player.stop();
-    go(() => resultsScreen(chart, speed, engine));
+    go(() => resultsScreen(chart, speed, engine, source));
   }
   /** Jump ahead to SKIP_TO seconds before the next line, if it's further away than that. Only while
    * waiting for a line (intro, gaps, or a line finished early): does nothing while a line can be typed. */
@@ -266,8 +290,7 @@ export async function playScreen(chart: Chart, speed: number): Promise<Screen> {
   window.addEventListener("blur", onBlur);
   player.onEnded = finish;
 
-  // lead in only if the first line starts within LEAD_IN seconds
-  player.play(Math.min(0, firstOnset + aOff - LEAD_IN), 0.2);
+  player.play(startFrom, 0.2);
   raf = requestAnimationFrame(frame);
   if (import.meta.env.DEV) (window as any).__play = { engine, player, aOff, skip };
 
@@ -279,7 +302,7 @@ export async function playScreen(chart: Chart, speed: number): Promise<Screen> {
       if (paused) {
         e.preventDefault();
         if (k === "Escape" || k === "Enter") resume();
-        else if (k.toLowerCase() === "r") go(() => playScreen(chart, speed));
+        else if (k.toLowerCase() === "r") go(() => playScreen(chart, speed, source));
         else if (k.toLowerCase() === "q") go(() => selectScreen());
         return;
       }

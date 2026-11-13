@@ -35,7 +35,21 @@ export function loadBuffer(url: string): Promise<AudioBuffer> {
   return p;
 }
 
-export class Player {
+/** What the play screen needs from a song player: positions are "real" seconds (at the chosen speed). */
+export interface GamePlayer {
+  readonly duration: number;
+  readonly playing: boolean;
+  onEnded: (() => void) | null;
+  play(from?: number, delay?: number): void;
+  time(): number;
+  timeOf(e: { timeStamp: number }): number;
+  pause(): void;
+  resume(delay?: number): void;
+  stop(): void;
+  dispose(): void;
+}
+
+export class Player implements GamePlayer {
   private src: AudioBufferSourceNode | null = null;
   private gain: GainNode;
   private startAt = 0; // heard-clock time of song position 0

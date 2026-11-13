@@ -17,6 +17,8 @@ export interface Chart {
   audio: string; // e.g. "audio@{speed}.ogg"
   lines: ChartLine[];
   source?: string; // where the timing came from
+  youtube?: { id: string; offsetMs: number; duration?: number };
+  note?: string; // shown on the play screen (e.g. timing may be off)
 }
 
 /** The characters a player types for a piece of display text: lowercase letters and digits only. */
@@ -115,12 +117,6 @@ function parenMask(text: string): boolean[] {
     if ((c === ")" || c === "]") && depth > 0) depth--;
   }
   return out;
-}
-
-export async function loadChart(id: string): Promise<Chart> {
-  const r = await fetch(`levels/${id}/chart.json`, { cache: "no-store" });
-  if (!r.ok) throw new Error(`could not load chart ${id}`);
-  return r.json();
 }
 
 export async function loadLevelIds(): Promise<string[]> {

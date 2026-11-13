@@ -8,7 +8,7 @@ back after >= 0.3 s of quiet; for each candidate offset (-1.5..+6 s) it counts l
 0.25 s of a phrase start. A song gets an offset only if it clearly beats no offset (>= 3 more lines and at
 least a third of lines). --apply shifts the original LRC times (chart.lrc.json, else chart.json) by it and
 writes chart.json; run check_sync.py --fix again afterwards. Prints times and counts only."""
-import json, os, shutil, sys
+import json, os, shutil, subprocess, sys
 import librosa, numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -55,3 +55,4 @@ for lid in ids:
         chart["lines"] = [{**l, "t": round(l["t"] + float(best), 3)} for l in base["lines"]]
         chart["source"] = base.get("source", "").split("+")[0] + f"+offset{best:+.2f}"
         json.dump(chart, open(os.path.join(level, "chart.json"), "w"), indent=1, ensure_ascii=False)
+        subprocess.run(["node", "scripts/levels.ts", "sync", os.path.basename(os.path.dirname(os.path.abspath(os.path.join(level, "chart.json"))))], check=True, cwd=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # refresh level.json

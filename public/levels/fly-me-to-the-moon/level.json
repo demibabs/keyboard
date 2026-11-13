@@ -1,0 +1,40 @@
+{
+ "format": 3,
+ "id": "fly-me-to-the-moon",
+ "version": 1,
+ "title": "Fly Me to the Moon",
+ "artist": "Frank Sinatra",
+ "duration": 147.191,
+ "offsetMs": 0,
+ "lyrics": {
+  "lrclib": 34412565,
+  "lines": 18,
+  "hash": "47a7e0f3"
+ },
+ "lines": [
+  [8.63,46],
+  [16.18,33],
+  [20.53,18],
+  [23.5,27],
+  [31.62,27],
+  [39.73,51],
+  [48.28,46],
+  [55.77,29],
+  [63.915,25],
+  [70.01,0],
+  [104.19,23],
+  [108.33,23],
+  [111.87,46],
+  [120.16,29],
+  [128.05,14],
+  [132.13,14],
+  [136.75,10],
+  [145.03,0]
+ ],
+ "youtube": {
+  "id": "JYuyWrkwpok",
+  "offsetMs": 0,
+  "duration": 148
+ },
+ "source": "lrclib:34412565+synccheck"
+}

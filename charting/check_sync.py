@@ -58,4 +58,5 @@ if a.fix and fixed:
         shutil.copyfile(src, os.path.join(LEVEL, "chart.lrc.json"))
     chart["source"] = chart.get("source", "") + "+synccheck"
     json.dump(chart, open(src, "w"), indent=1, ensure_ascii=False)
+    subprocess.run(["node", "scripts/levels.ts", "sync", os.path.basename(os.path.dirname(os.path.abspath(src)))], check=True, cwd=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # refresh level.json
     print(f"fixed {fixed} line(s); wrote {src}")

@@ -12,7 +12,7 @@ import argparse, difflib, glob, json, os, re, subprocess, sys, tempfile, urllib.
 
 SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5]
 API = "https://lrclib.net/api"
-UA = "lyric-typer/0.1 (local typing rhythm game)"
+UA = "keyboard/0.1 (typing rhythm game)"
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "public", "levels")
 VENV_PY = os.path.expanduser("~/.cache/lyric-align/.venv/bin/python")
@@ -86,6 +86,8 @@ def main():
     ap.add_argument("--id")
     ap.add_argument("--lrclib-id", type=int)
     ap.add_argument("--offset-ms", type=int, default=0)
+    ap.add_argument("--youtube", help="video id the audio came from (played in the release build)")
+    ap.add_argument("--youtube-offset-ms", type=int, default=0, help="video time of the audio's start")
     ap.add_argument("--force-audio", action="store_true")
     ap.add_argument("--no-text-check", action="store_true", help="pick by duration only (skip Whisper)")
     a = ap.parse_args()
@@ -130,7 +132,8 @@ def main():
             print(f"NOTE: best wording match is {rec['_match']:.0%}. Whisper mishears heavily processed or belted vocals,")
             print("      so check the lyrics by ear if the candidates' scores differ or the song has clear vocals")
 
-    out = write_chart(lid, a.title, a.artist, dur, rec, a.offset_ms)
+    yt = {"id": a.youtube, "offsetMs": a.youtube_offset_ms, "duration": round(dur)} if a.youtube else None
+    out = write_chart(lid, a.title, a.artist, dur, rec, a.offset_ms, youtube=yt)
     render_speeds(a.audio, out, a.force_audio)
     write_index()
 
@@ -145,13 +148,15 @@ def clean_lines(lrc):
     return clean
 
 
-def write_chart(lid, title, artist, dur, rec, offset_ms=0, quiet=False):
+def write_chart(lid, title, artist, dur, rec, offset_ms=0, quiet=False, youtube=None):
     lines = clean_lines(rec["syncedLyrics"])
     out = os.path.join(ROOT, lid)
     os.makedirs(out, exist_ok=True)
     chart = {"format": 2, "id": lid, "version": 1, "title": title, "artist": artist, "duration": round(dur, 3),
              "offsetMs": offset_ms, "speeds": SPEEDS, "audio": "audio@{speed}.ogg",
              "source": f"lrclib:{rec['id']}", "lines": lines}
+    if youtube:  # {"id": video id, "offsetMs": video time of chart 0, "duration": video seconds}
+        chart["youtube"] = youtube
     with open(os.path.join(out, "chart.json"), "w") as f:
         json.dump(chart, f, indent=1, ensure_ascii=False)
     if not quiet:
@@ -179,12 +184,11 @@ def render_speeds(audio, out, force=False, quiet=False):
                 print("rendered", os.path.basename(dst))
 
 
-def write_index():
-    """List every level whose chart and audio at all speeds exist (half-rendered levels stay hidden)."""
-    ids = sorted(d for d in os.listdir(ROOT) if os.path.exists(os.path.join(ROOT, d, "chart.json"))
-                 and all(os.path.exists(os.path.join(ROOT, d, f"audio@{sp:.2f}.ogg")) for sp in SPEEDS))
-    with open(os.path.join(ROOT, "index.json"), "w") as f:
-        json.dump({"levels": ids}, f)
+def write_index(only=None):
+    """chart.json -> level.json (the committed, lyric-free level file), then index.json + local.json.
+    A level is listed once it has a YouTube video or its audio at every speed (scripts/levels.ts)."""
+    subprocess.run(["node", os.path.join(HERE, "..", "scripts", "levels.ts"), "sync", *(only or [])],
+                   check=True, cwd=os.path.join(HERE, ".."))
 
 
 if __name__ == "__main__":

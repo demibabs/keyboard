@@ -58,7 +58,7 @@ kbd {
 .brand h1 { margin: 0; font-size: clamp(40px, 6vw, 72px); font-weight: 800; letter-spacing: -0.03em; }
 .brand h1 span {
   background: linear-gradient(90deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text; background-clip: text; color: transparent; margin-left: 0.2em;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .brand p { margin: 6px 0 0; color: var(--soft); font-size: 17px; }
 .brand.small { padding-top: 32px; }
@@ -262,3 +262,21 @@ kbd {
   .results-grid { grid-template-columns: 1fr; }
   .results-head { flex-direction: column; text-align: center; }
 }
+
+/* YouTube player (YouTube's embed rules: visible, at least 200x200) */
+.yt-host { position: fixed; z-index: 30; }
+.yt-host.off { visibility: hidden; pointer-events: none; left: -9999px; top: 0; }
+.yt-host .yt-box { aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+.yt-host iframe { width: 100%; height: 100%; display: block; border: 0; }
+.yt-host.prep { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100vw - 32px)); }
+.yt-host.prep .yt-box { min-height: 200px; }
+.yt-host .yt-caption { margin: 14px 0 0; text-align: center; color: var(--soft); white-space: pre-wrap; }
+.yt-host.corner { right: 16px; bottom: 44px; width: 356px; }
+.yt-host.corner .yt-box { height: 200px; }
+.yt-host.corner .yt-caption { display: none; }
+@media (max-width: 720px) { .yt-host.corner { right: 50%; transform: translateX(50%); bottom: 40px; } }
+
+.play-note { margin: 8px auto 0; padding: 6px 12px; border-radius: 8px; background: var(--panel2); color: var(--soft); font-size: 13px; }
+.message { display: grid; place-items: center; height: 100%; padding: 16px; }
+.message .panel { max-width: 520px; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
+.message h2 { margin-top: 0; }

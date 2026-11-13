@@ -5,16 +5,18 @@ export interface Settings {
   volume: number;
   speed: number;
   levelId: string;
+  audioSource: "local" | "youtube"; // preferred, when a level has both
 }
 export interface Best { score: number; grade: string; accuracy: number; fc: boolean }
 
-const KEY = "lyric-typer:settings";
-const BEST = "lyric-typer:best-v2"; // v2: accuracy + line-bonus scoring (old timing-based bests aren't comparable)
-const defaults: Settings = { audioOffsetMs: 0, visualOffsetMs: 0, volume: 0.8, speed: 0.75, levelId: "" };
+const KEY = "keyboard:settings";
+const BEST = "keyboard:best-v2"; // v2: accuracy + line-bonus scoring (old timing-based bests aren't comparable)
+const OLD_NAME: Record<string, string> = { [KEY]: "lyric-typer:settings", [BEST]: "lyric-typer:best-v2" }; // before the rename
+const defaults: Settings = { audioOffsetMs: 0, visualOffsetMs: 0, volume: 0.8, speed: 0.75, levelId: "", audioSource: "local" };
 
 function read<T>(k: string, fallback: T): T {
   try {
-    const v = localStorage.getItem(k);
+    const v = localStorage.getItem(k) ?? (OLD_NAME[k] ? localStorage.getItem(OLD_NAME[k]) : null);
     return v ? { ...fallback, ...JSON.parse(v) } : fallback;
   } catch { return fallback; }
 }

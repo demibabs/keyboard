@@ -4,8 +4,10 @@ import { Engine } from "../src/engine";
 
 // For every line of the real chart and every position: type the line perfectly except for one slip
 // (skipped letter, doubled letter, skipped word). The correction rules should keep the damage tiny.
-it("single slips cost at most 2 letters", () => {
-  const chart = JSON.parse(fs.readFileSync("public/levels/twilight-zone/chart.json", "utf8"));
+// Needs a full local chart (lyric text isn't committed); skipped in a fresh clone.
+const CHART = "public/levels/twilight-zone/chart.json";
+it.skipIf(!fs.existsSync(CHART))("single slips cost at most 2 letters", () => {
+  const chart = JSON.parse(fs.readFileSync(CHART, "utf8"));
   for (const kind of ["skip", "double", "skipword", "stray2"] as const) {
     const hist = new Map<number, number>();
     const worst: string[] = [];
