@@ -6,7 +6,7 @@ A typing rhythm game: each level is a song, and you type each lyric line as it's
 npm install
 npm run dev        # http://localhost:5173
 npm test           # unit tests
-npm run build      # static release build in dist/ (level files only)
+npm run build      # static release build in dist/ (level files only); pushes to main deploy it to GitHub Pages
 CHROME=/path/to/chrome npm run e2e -- 1.5 0       # bot plays a level (dev server running); YT=1 to play the video
 CHROME=/path/to/chrome node e2e/youtube.mjs <id>  # checks the game clock against the YouTube video
 ```
