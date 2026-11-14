@@ -11,8 +11,12 @@ page.on("pageerror", (e) => console.log("pageerror:", e.message));
 await page.goto("http://localhost:5173/#/play");
 await page.evaluate(([id, s]) => localStorage.setItem("startype:settings", JSON.stringify({ speed: s, levelId: id, audioSource: "youtube", volume: 0.8 })), [id, speed]);
 await page.reload();
-await page.waitForSelector(".song-card");
+await page.waitForSelector(".sm-card");
 await page.screenshot({ path: "e2e/out/yt-select.png" });
+// open the level: show all songs (A–Z), click its card, then Enter plays
+await page.click(".sm-all");
+await page.locator(`.sm-card[data-id="${id}"]`).first().click();
+await page.waitForSelector(".sm-open");
 await page.keyboard.press("Enter");
 const t0 = Date.now();
 await page.waitForTimeout(1500);

@@ -1,7 +1,5 @@
 // Per-browser settings and best scores (localStorage, guarded).
 export interface Settings {
-  audioOffsetMs: number; // added to key times' lag: key judged at (heard time - audioOffset)
-  visualOffsetMs: number; // display/input lag measured by the visual test
   volume: number;
   speed: number;
   levelId: string;
@@ -16,7 +14,7 @@ const OLD_NAMES: Record<string, string[]> = {
   [KEY]: ["keyboard:settings", "lyric-typer:settings"],
   [BEST]: ["keyboard:best-v2", "lyric-typer:best-v2"],
 };
-const defaults: Settings = { audioOffsetMs: 0, visualOffsetMs: 0, volume: 0.8, speed: 0.75, levelId: "", audioSource: "local" };
+const defaults: Settings = { volume: 0.8, speed: 0.75, levelId: "", audioSource: "local" };
 
 function read<T>(k: string, fallback: T): T {
   try {

@@ -3,10 +3,10 @@ import { Engine, type EngineEvent } from "./engine";
 import { Player, loadBuffer, type GamePlayer } from "./audio";
 import { Cancelled, YouTubePlayer } from "./youtube";
 import { h, fmtScore, pct } from "./dom";
-import { go, type Screen } from "./main";
+import { go, navigate, type Screen } from "./main";
 import { settings } from "./settings";
 import { resultsScreen } from "./results";
-import { selectScreen } from "./select";
+import { songMenuScreen } from "./menu/song-menu";
 
 const LEAD_IN = 2.5; // seconds of lead-in before the first line when the song starts with vocals
 const SKIP_TO = 1; // Tab skips ahead to this many seconds before the next line (when it's further away)
@@ -25,30 +25,29 @@ export function messageScreen(title: string, body: string): Screen {
   return {
     el: h("div", { class: "message" }, h("div", { class: "panel" }, h("h2", {}, title), h("p", {}, body),
       h("p", { class: "keys" }, h("kbd", {}, "Enter"), " back to songs"))),
-    onKey(e) { if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); go(() => selectScreen()); } },
+    onKey(e) { if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); navigate("play"); } },
   };
 }
 
 export async function playScreen(chart: Chart, speed: number, source: AudioSource): Promise<Screen> {
   const engine = new Engine(chart, speed);
   const lines = engine.lines;
-  const aOff = settings.audioOffsetMs / 1000;
   // lead in only if the first line starts within LEAD_IN seconds
-  const startFrom = Math.min(0, (lines.length ? engine.onset(0) : 0) + aOff - LEAD_IN);
+  const startFrom = Math.min(0, (lines.length ? engine.onset(0) : 0) - LEAD_IN);
   let player: GamePlayer;
   if (source === "youtube" && chart.youtube) {
     try {
       player = await YouTubePlayer.open(chart.youtube, speed, chart.duration / speed, settings.volume, startFrom);
     } catch (err) {
-      if (err instanceof Cancelled) return selectScreen();
+      if (err instanceof Cancelled) return songMenuScreen();
       return messageScreen("Couldn't play the video", err instanceof Error ? err.message : String(err));
     }
   } else {
     player = new Player(await loadBuffer(audioUrl(chart, speed)), settings.volume);
   }
-  const vOff = (settings.audioOffsetMs - settings.visualOffsetMs) / 1000;
-  const judgeNow = () => player.time() - aOff;
-  const visNow = () => player.time() - vOff;
+  // no latency calibration: lines stay open for seconds, so a few tens of ms of device lag don't matter
+  const judgeNow = () => player.time();
+  const visNow = () => player.time();
 
   // ---------- DOM ----------
   const scoreEl = h("div", { class: "hud-score" }, "0");
@@ -292,7 +291,7 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
 
   player.play(startFrom, 0.2);
   raf = requestAnimationFrame(frame);
-  if (import.meta.env.DEV) (window as any).__play = { engine, player, aOff, skip };
+  if (import.meta.env.DEV) (window as any).__play = { engine, player, aOff: 0, skip };
 
   return {
     el,
@@ -303,7 +302,7 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
         e.preventDefault();
         if (k === "Escape" || k === "Enter") resume();
         else if (k.toLowerCase() === "r") go(() => playScreen(chart, speed, source));
-        else if (k.toLowerCase() === "q") go(() => selectScreen());
+        else if (k.toLowerCase() === "q") navigate("play");
         return;
       }
       if (k === "Escape") { e.preventDefault(); pause(); return; }
@@ -313,7 +312,7 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
       const ch = k.length === 1 ? k.toLowerCase() : "";
       if (/^[a-z0-9 -]$/.test(ch)) {
         e.preventDefault();
-        engine.key(ch, player.timeOf(e) - aOff);
+        engine.key(ch, player.timeOf(e));
         const evs = engine.events;
         engine.events = [];
         evs.forEach(handle);

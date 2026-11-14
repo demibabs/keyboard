@@ -1,10 +1,9 @@
 import type { Chart } from "./chart";
 import { Engine, grade } from "./engine";
 import { h, fmtScore, pct } from "./dom";
-import { go, type Screen } from "./main";
+import { go, navigate, type Screen } from "./main";
 import { recordBest } from "./settings";
 import { playScreen, type AudioSource } from "./play";
-import { selectScreen } from "./select";
 
 export function resultsScreen(chart: Chart, speed: number, engine: Engine, source: AudioSource): Screen {
   const acc = engine.accuracy(true);
@@ -49,7 +48,7 @@ export function resultsScreen(chart: Chart, speed: number, engine: Engine, sourc
     onKey(e) {
       if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
       if (e.key.toLowerCase() === "r") go(() => playScreen(chart, speed, source));
-      else if (e.key === "Enter" || e.key === "Escape") go(() => selectScreen());
+      else if (e.key === "Enter" || e.key === "Escape") navigate("play");
     },
   };
 }

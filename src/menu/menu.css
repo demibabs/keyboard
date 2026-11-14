@@ -1,4 +1,4 @@
-/* Shared by the song menu mockups. Tier colours on the night-sky palette. */
+/* Tier colours on the night-sky palette (song menu). */
 .landing {
   --t-easy: #8fe3c0;
   --t-normal: #8fd3ff;
@@ -11,17 +11,3 @@
 .landing .t-hard { color: var(--t-hard); }
 .landing .t-expert { color: var(--t-expert); }
 .landing .t-insane { color: var(--t-insane); }
-
-/* mock chooser */
-.mocks { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 48px 16px 80px; }
-.mocks h1 { margin: 0; font-size: clamp(34px, 5vw, 52px); font-weight: 700; letter-spacing: -0.03em; }
-.mocks > p { color: var(--pale); opacity: 0.8; margin: 10px 0 32px; font-size: 17px; }
-.mock-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px; }
-.mock-tile {
-  display: block; padding: 22px 24px; border-radius: 16px; text-decoration: none; color: inherit;
-  background: var(--card); border: 1px solid var(--card-line); transition: border-color 0.15s, transform 0.15s;
-}
-.mock-tile:hover { border-color: rgba(204, 214, 255, 0.4); transform: translateY(-2px); }
-.mock-tile b { display: block; font-size: 20px; margin-bottom: 6px; }
-.mock-tile b span { color: var(--gold); margin-right: 8px; }
-.mock-tile p { margin: 0; color: var(--pale); opacity: 0.75; line-height: 1.5; }

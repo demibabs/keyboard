@@ -1,5 +1,5 @@
 // Web Audio playback on the audio clock. "Song time" = seconds into the audio file being heard
-// (output latency removed); the calibration offsets in settings handle what's left.
+// (output latency removed).
 
 let ctx: AudioContext | null = null;
 export function audioCtx(): AudioContext {

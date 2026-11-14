@@ -12,11 +12,17 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
 page.on("console", (m) => { if (m.type() === "error") console.log("console:", m.text()); });
 page.on("pageerror", (e) => console.log("pageerror:", e.message));
 await page.goto("http://localhost:5173/#/play");
-await page.waitForSelector(".song-card");
-await page.evaluate(([s, src]) => localStorage.setItem("startype:settings", JSON.stringify({ speed: s, audioOffsetMs: 0, visualOffsetMs: 0, levelId: "twilight-zone", volume: 0.8, audioSource: src })), [speed, process.env.YT ? "youtube" : "local"]);
+await page.waitForSelector(".sm-card");
+await page.evaluate(([s, src]) => localStorage.setItem("startype:settings", JSON.stringify({ speed: s, levelId: "twilight-zone", volume: 0.8, audioSource: src })), [speed, process.env.YT ? "youtube" : "local"]);
 await page.reload();
-await page.waitForSelector(".song-card");
+await page.waitForSelector(".sm-card");
 await page.screenshot({ path: "e2e/out/select.png" });
+// open the song: search, Enter goes to the first match, Enter opens its panel, Enter plays
+await page.keyboard.press("/");
+await page.keyboard.type("twilight zone");
+await page.keyboard.press("Enter"); // first match
+await page.keyboard.press("Enter"); // open it
+await page.waitForSelector(".sm-open");
 await page.keyboard.press("Enter");
 await page.waitForFunction(() => (window).__play, null, { timeout: 90000 });
 // skip the intro, then let the in-page bot type
@@ -62,12 +68,12 @@ const res = await page.evaluate(() => [...document.querySelectorAll(".res-row")]
 console.log(res);
 console.log("slips", await page.evaluate(() => (window).__slips ?? 0), "resyncs", await page.evaluate(() => (window).__resyncs ?? 0));
 await page.keyboard.press("Enter");
-await page.waitForSelector(".song-card");
-await page.keyboard.press("c");
-await page.waitForSelector(".calibrate");
-await page.screenshot({ path: "e2e/out/calibrate.png" });
-await page.keyboard.press("Escape");
-await page.waitForSelector(".song-card");
+await page.waitForSelector(".sm-card");
+await page.keyboard.press("/");
+await page.keyboard.type("twilight zone");
+await page.keyboard.press("Enter"); // first match
+await page.keyboard.press("Enter"); // open it
+await page.waitForSelector(".sm-open");
 await page.keyboard.press("e");
 await page.waitForSelector(".ed-canvas");
 await page.waitForTimeout(800);

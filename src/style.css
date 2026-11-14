@@ -51,55 +51,14 @@ kbd {
 .loading, .fatal { display: grid; place-items: center; height: 100%; color: var(--soft); font-size: 18px; }
 .fatal { color: var(--miss); padding: 24px; text-align: center; }
 .keys { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; color: var(--dim); font-size: 13px; padding: 16px; }
-.notice { color: var(--good); font-size: 14px; margin: 12px 0 0; }
-
-/* ---------- brand / select ---------- */
-.brand { text-align: center; padding: 48px 16px 8px; }
-.brand h1 { margin: 0; font-size: clamp(40px, 6vw, 72px); font-weight: 800; letter-spacing: -0.03em; }
-.brand h1 span {
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.brand p { margin: 6px 0 0; color: var(--soft); font-size: 17px; }
-.brand.small { padding-top: 32px; }
-.brand.small h1 { font-size: 40px; }
-
-.select { display: flex; flex-direction: column; height: 100%; }
-.select-main {
-  flex: 1; display: grid; grid-template-columns: minmax(240px, 360px) minmax(300px, 520px);
-  gap: 24px; justify-content: center; align-content: start; padding: 32px 16px; min-height: 0;
-}
-.song-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-.song-card {
-  display: grid; grid-template-columns: 1fr auto; text-align: left; gap: 2px 12px;
-  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px;
-  transition: border-color 0.15s, transform 0.15s;
-}
-.song-card:hover { border-color: var(--dim); }
-.song-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(169, 139, 255, 0.18); }
-.song-title { font-weight: 700; font-size: 18px; }
-.song-artist { color: var(--soft); font-size: 14px; grid-column: 1; }
-.tier-chip { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: var(--panel2); }
 .t-easy { color: var(--great); } .t-normal { color: var(--perfect); } .t-hard { color: var(--good); }
 .t-expert { color: var(--accent2); } .t-insane { color: var(--miss); }
-
-.song-detail { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
-.detail-head h2 { margin: 0; font-size: 32px; letter-spacing: -0.02em; }
 .artist { color: var(--soft); margin: 4px 0 0; }
-.speed-row { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
 .speed-pill {
   background: var(--panel2); border: 1px solid var(--line); border-radius: 99px; padding: 7px 14px; font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .speed-pill.on { background: var(--accent); border-color: var(--accent); color: #140f2b; }
-.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.stat { background: var(--bg2); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
-.stat-label { color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
-.stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
-.play-btn {
-  margin-top: 20px; width: 100%; padding: 14px; border: 0; border-radius: 12px; font-weight: 800; font-size: 18px;
-  background: linear-gradient(90deg, var(--accent), var(--accent2)); color: #140f2b;
-}
 
 /* ---------- play ---------- */
 .play { display: flex; flex-direction: column; height: 100%; position: relative; }
@@ -220,21 +179,6 @@ kbd {
 .hist-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
 .hist-label { display: flex; justify-content: space-between; color: var(--dim); font-size: 13px; margin-bottom: 8px; }
 .histogram { display: block; height: 150px; }
-
-/* ---------- calibrate ---------- */
-.calibrate { display: flex; flex-direction: column; align-items: center; height: 100%; }
-.cal-tabs { display: flex; gap: 8px; margin: 20px 0; }
-.cal-tab { background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 8px 18px; font-weight: 600; }
-.cal-tab.on { background: var(--accent); color: #140f2b; border-color: var(--accent); }
-.cal-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; width: min(560px, 92vw); }
-.cal-flash { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--line); transition: none; }
-.cal-flash.lit { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 40px var(--accent2); }
-.cal-instr { color: var(--soft); text-align: center; font-size: 17px; margin: 0; min-height: 2.6em; }
-.cal-dots { position: relative; width: 100%; height: 28px; background: var(--panel); border-radius: 14px; }
-.cal-zero { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; background: var(--dim); }
-.cal-dot { position: absolute; top: 8px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--accent); opacity: 0.7; }
-.cal-measured { font-size: 18px; color: var(--soft); }
-.cal-current { color: var(--soft); padding: 8px; }
 
 /* ---------- editor ---------- */
 .editor { display: flex; flex-direction: column; height: 100%; padding: 16px 20px 0; gap: 10px; }

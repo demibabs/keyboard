@@ -1,4 +1,4 @@
-// Shared data for the song menu (used by the menu mockups): every level as a Song, with its difficulty,
+// Shared data for the song menu: every level as a Song, with its difficulty,
 // cover, best score and where its audio comes from, plus starting a song.
 import { difficulty, flatten, loadLevelIds, type Chart } from "../chart";
 import { loadLevel, loadLocalIds, loadLyrics, skeleton, type Level } from "../lyrics";

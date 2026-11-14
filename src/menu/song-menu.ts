@@ -1,9 +1,13 @@
-// Song menu mockup B, "Shelves": discovery like a music app. Rows of album covers (jump back in,
+// Song menu (#/play), "Shelves": discovery like a music app. Rows of album covers (jump back in,
 // warm-ups, one per tier, more from an artist); searching swaps the rows for a grid of matches. A song
-// opens in a drawer (a bottom sheet on phones) to pick the speed and play.
-import "./mock-b.css";
+// opens in a drawer (a bottom sheet on phones) to pick the speed and play. With local audio (dev) the
+// drawer can also switch the audio source and open the chart editor.
+import "./menu.css";
+import "./song-menu.css";
 import { h, fmtScore, pct } from "../dom";
-import { navigate, type Screen } from "../main";
+import { go, navigate, type Screen } from "../main";
+import { loadLyrics } from "../lyrics";
+import { editorScreen } from "../editor";
 import { navbar, rng, sky } from "../landing";
 import { settings, saveSettings } from "../settings";
 import {
@@ -35,7 +39,7 @@ const TIER_RGB: Record<string, string> = {
 };
 
 function cover(s: Song, cls: string): HTMLElement {
-  const wrap = h("div", { class: `mb-cover ${cls}` });
+  const wrap = h("div", { class: `sm-cover ${cls}` });
   const src = s.art ?? s.thumb;
   if (src) {
     const img = h("img", { src, alt: "", loading: "lazy", draggable: "false" });
@@ -50,7 +54,7 @@ function cover(s: Song, cls: string): HTMLElement {
 
 interface Shelf { title: string; sub?: string; songs: Song[] }
 
-export async function mockBScreen(): Promise<Screen> {
+export async function songMenuScreen(): Promise<Screen> {
   const songs = await loadSongs();
   let speed = SPEEDS.includes(settings.speed) ? settings.speed : 1;
   let query = "";
@@ -60,31 +64,31 @@ export async function mockBScreen(): Promise<Screen> {
 
   // ---------- header ----------
   const search = h("input", {
-    class: "mb-search-input", type: "search", placeholder: "Search songs or artists", "aria-label": "Search songs",
+    class: "sm-search-input", type: "search", placeholder: "Search songs or artists", "aria-label": "Search songs",
     autocomplete: "off", spellcheck: "false",
   });
-  const speedRow = h("div", { class: "mb-speeds", role: "group", "aria-label": "Speed" });
-  const allBtn = h("button", { class: "mb-all", onclick: () => { showAll = !showAll; query = ""; search.value = ""; render(); } });
-  const head = h("header", { class: "mb-head" },
-    h("div", { class: "mb-titles" },
+  const speedRow = h("div", { class: "sm-speeds", role: "group", "aria-label": "Speed" });
+  const allBtn = h("button", { class: "sm-all", onclick: () => { showAll = !showAll; query = ""; search.value = ""; render(); } });
+  const head = h("header", { class: "sm-head" },
+    h("div", { class: "sm-titles" },
       h("h1", {}, "Songs"),
-      h("p", {}, `${songs.length} songs · mockup B, shelves`)),
-    h("div", { class: "mb-tools" },
-      h("label", { class: "mb-search" },
-        h("span", { class: "mb-search-icon", "aria-hidden": "true" }), search, h("kbd", {}, "/")),
-      h("div", { class: "mb-speed-wrap" }, h("span", { class: "mb-label" }, "Speed"), speedRow),
+      h("p", {}, `${songs.length} songs`)),
+    h("div", { class: "sm-tools" },
+      h("label", { class: "sm-search" },
+        h("span", { class: "sm-search-icon", "aria-hidden": "true" }), search, h("kbd", {}, "/")),
+      h("div", { class: "sm-speed-wrap" }, h("span", { class: "sm-label" }, "Speed"), speedRow),
       allBtn));
-  const body = h("main", { class: "mb-body" });
+  const body = h("main", { class: "sm-body" });
 
   // ---------- drawer ----------
-  const scrim = h("div", { class: "mb-scrim", onclick: () => close() });
-  const drawer = h("aside", { class: "mb-drawer", role: "dialog", "aria-modal": "true", "aria-label": "Song" });
+  const scrim = h("div", { class: "sm-scrim", onclick: () => close() });
+  const drawer = h("aside", { class: "sm-drawer", role: "dialog", "aria-modal": "true", "aria-label": "Song" });
 
-  const page = h("div", { class: "landing mb-page" }, sky(), navbar(), h("div", { class: "mb-wrap" }, head, body), scrim, drawer);
+  const page = h("div", { class: "landing sm-page" }, sky(), navbar(), h("div", { class: "sm-wrap" }, head, body), scrim, drawer);
 
   function renderSpeeds() {
     speedRow.replaceChildren(...SPEEDS.map((s) =>
-      h("button", { class: "mb-speed" + (s === speed ? " on" : ""), "aria-pressed": String(s === speed), onclick: () => setSpeed(s) }, `${s}×`)));
+      h("button", { class: "sm-speed" + (s === speed ? " on" : ""), "aria-pressed": String(s === speed), onclick: () => setSpeed(s) }, `${s}×`)));
   }
   function setSpeed(s: number) {
     if (s === speed) return;
@@ -99,12 +103,12 @@ export async function mockBScreen(): Promise<Screen> {
   // ---------- cards ----------
   function card(s: Song): HTMLButtonElement {
     const d = difficultyOf(s, speed);
-    return h("button", { class: "mb-card", "data-id": s.id, onclick: (e: MouseEvent) => { if (!dragged) open(s, e.currentTarget as HTMLElement); } },
-      cover(s, "mb-card-cover"),
-      h("span", { class: "mb-card-title" }, s.title),
-      h("span", { class: "mb-card-meta" },
-        h("span", { class: "mb-card-artist" }, s.artist),
-        h("span", { class: `mb-tier ${d.cls}` }, d.tier)));
+    return h("button", { class: "sm-card", "data-id": s.id, onclick: (e: MouseEvent) => { if (!dragged) open(s, e.currentTarget as HTMLElement); } },
+      cover(s, "sm-card-cover"),
+      h("span", { class: "sm-card-title" }, s.title),
+      h("span", { class: "sm-card-meta" },
+        h("span", { class: "sm-card-artist" }, s.artist),
+        h("span", { class: `sm-tier ${d.cls}` }, d.tier)));
   }
 
   function shelves(): Shelf[] {
@@ -148,9 +152,9 @@ export async function mockBScreen(): Promise<Screen> {
   }
 
   function shelfEl(sh: Shelf): HTMLElement {
-    const track = h("div", { class: "mb-track" }, ...sh.songs.map(card));
-    const prev = h("button", { class: "mb-arrow prev", "aria-label": `Scroll ${sh.title} left`, onclick: () => track.scrollBy({ left: -track.clientWidth * 0.8, behavior: "smooth" }) });
-    const next = h("button", { class: "mb-arrow next", "aria-label": `Scroll ${sh.title} right`, onclick: () => track.scrollBy({ left: track.clientWidth * 0.8, behavior: "smooth" }) });
+    const track = h("div", { class: "sm-track" }, ...sh.songs.map(card));
+    const prev = h("button", { class: "sm-arrow prev", "aria-label": `Scroll ${sh.title} left`, onclick: () => track.scrollBy({ left: -track.clientWidth * 0.8, behavior: "smooth" }) });
+    const next = h("button", { class: "sm-arrow next", "aria-label": `Scroll ${sh.title} right`, onclick: () => track.scrollBy({ left: track.clientWidth * 0.8, behavior: "smooth" }) });
     const ends = () => {
       prev.disabled = track.scrollLeft < 4;
       next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 4;
@@ -159,12 +163,12 @@ export async function mockBScreen(): Promise<Screen> {
     track.addEventListener("scroll", ends, { passive: true });
     requestAnimationFrame(ends);
     draggable(track);
-    return h("section", { class: "mb-shelf" },
-      h("div", { class: "mb-shelf-head" },
+    return h("section", { class: "sm-shelf" },
+      h("div", { class: "sm-shelf-head" },
         h("h2", {}, sh.title),
-        sh.sub ? h("span", { class: "mb-shelf-sub" }, sh.sub) : "",
-        h("span", { class: "mb-shelf-count" }, String(sh.songs.length)),
-        h("div", { class: "mb-arrows" }, prev, next)),
+        sh.sub ? h("span", { class: "sm-shelf-sub" }, sh.sub) : "",
+        h("span", { class: "sm-shelf-count" }, String(sh.songs.length)),
+        h("div", { class: "sm-arrows" }, prev, next)),
       track);
   }
 
@@ -176,9 +180,9 @@ export async function mockBScreen(): Promise<Screen> {
       const list = (q ? songs.filter((s) => matches(s, q)) : [...songs]).sort((a, b) => a.title.localeCompare(b.title));
       const label = q ? `${list.length} ${list.length === 1 ? "match" : "matches"} for “${q}”` : `All ${list.length} songs, A–Z`;
       body.replaceChildren(
-        h("p", { class: "mb-results" }, label),
-        list.length ? h("div", { class: "mb-grid" }, ...list.map(card))
-          : h("p", { class: "mb-empty" }, "Nothing matches that. Try an artist, or part of a title."));
+        h("p", { class: "sm-results" }, label),
+        list.length ? h("div", { class: "sm-grid" }, ...list.map(card))
+          : h("p", { class: "sm-empty" }, "Nothing matches that. Try an artist, or part of a title."));
     } else {
       body.replaceChildren(...shelves().map(shelfEl));
     }
@@ -186,49 +190,64 @@ export async function mockBScreen(): Promise<Screen> {
 
   // ---------- drawer ----------
   function stat(label: string, value: Node | string) {
-    return h("div", { class: "mb-stat" }, h("span", { class: "mb-stat-label" }, label), h("span", { class: "mb-stat-value" }, value));
+    return h("div", { class: "sm-stat" }, h("span", { class: "sm-stat-label" }, label), h("span", { class: "sm-stat-value" }, value));
   }
   function renderDrawer(s: Song) {
     const d = difficultyOf(s, speed);
     const best = bestOf(s, speed);
     const src = sourceFor(s);
-    const playBtn = h("button", { class: "hero-play mb-play", onclick: () => play(), disabled: !src },
+    const playBtn = h("button", { class: "hero-play sm-play", onclick: () => play(), disabled: !src },
       h("span", { class: "hero-play-icon", "aria-hidden": "true" }), "Play");
-    const art = h("div", { class: "mb-drawer-art" }, cover(s, "mb-drawer-cover"));
-    art.style.setProperty("--mb-facets", facets(s.id.length * 31 + s.title.length, `rgb(${TIER_RGB[d.tier]})`));
-    art.style.setProperty("--mb-tint", TIER_RGB[d.tier]);
+    const art = h("div", { class: "sm-drawer-art" }, cover(s, "sm-drawer-cover"));
+    art.style.setProperty("--sm-facets", facets(s.id.length * 31 + s.title.length, `rgb(${TIER_RGB[d.tier]})`));
+    art.style.setProperty("--sm-tint", TIER_RGB[d.tier]);
     drawer.replaceChildren(
-      h("button", { class: "mb-close", "aria-label": "Close", onclick: () => close() }),
+      h("button", { class: "sm-close", "aria-label": "Close", onclick: () => close() }),
       art,
-      h("div", { class: "mb-drawer-body" },
-        h("p", { class: `mb-drawer-tier ${d.cls}` }, `${d.tier} at ${speed}×`),
-        h("h2", { class: "mb-drawer-title" }, s.title),
-        h("p", { class: "mb-drawer-artist" }, s.artist),
-        h("div", { class: "mb-speeds mb-drawer-speeds", role: "group", "aria-label": "Speed" }, ...SPEEDS.map((sp) =>
-          h("button", { class: "mb-speed" + (sp === speed ? " on" : ""), "aria-pressed": String(sp === speed), onclick: () => setSpeed(sp) }, `${sp}×`))),
-        h("div", { class: "mb-stats" },
+      h("div", { class: "sm-drawer-body" },
+        h("p", { class: `sm-drawer-tier ${d.cls}` }, `${d.tier} at ${speed}×`),
+        h("h2", { class: "sm-drawer-title" }, s.title),
+        h("p", { class: "sm-drawer-artist" }, s.artist),
+        h("div", { class: "sm-speeds sm-drawer-speeds", role: "group", "aria-label": "Speed" }, ...SPEEDS.map((sp) =>
+          h("button", { class: "sm-speed" + (sp === speed ? " on" : ""), "aria-pressed": String(sp === speed), onclick: () => setSpeed(sp) }, `${sp}×`))),
+        h("div", { class: "sm-stats" },
           stat("Needs", `~${d.needs} WPM`),
           stat("Hardest line", `${d.burst} WPM`),
           stat("Length", lengthAt(s, speed)),
           stat("Lines", String(s.lines)),
           stat("Best", best ? `${fmtScore(best.score)} · ${best.grade} · ${pct(best.accuracy)}` : "Not played yet"),
-          stat("Audio", src === "local" ? "Local file" : src === "youtube" ? "YouTube" : "Unavailable")),
+          stat("Audio", s.local && s.youtube
+            ? h("button", { class: "sm-source", onclick: () => toggleSource(), title: "Switch audio source (A)" },
+              src === "local" ? "Local file" : "YouTube")
+            : src === "local" ? "Local file" : src === "youtube" ? "YouTube" : "Unavailable")),
         playBtn,
-        h("p", { class: "mb-drawer-hint" }, h("kbd", {}, "Enter"), " play  ", h("kbd", {}, "←→"), " speed  ", h("kbd", {}, "Esc"), " close")));
+        h("p", { class: "sm-drawer-hint" }, h("kbd", {}, "Enter"), " play  ", h("kbd", {}, "←→"), " speed  ", h("kbd", {}, "Esc"), " close"),
+        s.local ? h("button", { class: "sm-edit", onclick: () => edit() }, "Edit timing (E)") : ""));
+  }
+  /** Local audio or the YouTube video, for songs that have both (dev). */
+  function toggleSource() {
+    settings.audioSource = settings.audioSource === "local" ? "youtube" : "local";
+    saveSettings();
+    if (openSong) renderDrawer(openSong);
+  }
+  /** Chart editor (needs the local audio for its waveform). */
+  function edit() {
+    const s = openSong;
+    if (s?.local) go(async () => editorScreen(await loadLyrics(s.level)));
   }
   function open(s: Song, from?: HTMLElement) {
     openSong = s;
     lastFocus = from ?? (document.activeElement as HTMLElement | null);
     renderDrawer(s);
-    page.classList.add("mb-open");
-    (drawer.querySelector(".mb-play") as HTMLElement | null)?.focus({ preventScroll: true });
+    page.classList.add("sm-open");
+    (drawer.querySelector(".sm-play") as HTMLElement | null)?.focus({ preventScroll: true });
   }
   function close() {
     if (!openSong) return;
     openSong = null;
-    page.classList.remove("mb-open");
+    page.classList.remove("sm-open");
     render(); // speed may have changed the tiers
-    const back = lastFocus?.dataset.id && body.querySelector<HTMLElement>(`.mb-card[data-id="${lastFocus.dataset.id}"]`);
+    const back = lastFocus?.dataset.id && body.querySelector<HTMLElement>(`.sm-card[data-id="${lastFocus.dataset.id}"]`);
     (back || null)?.focus({ preventScroll: false });
   }
   function play() {
@@ -238,9 +257,9 @@ export async function mockBScreen(): Promise<Screen> {
   // ---------- keyboard ----------
   /** Cards as rows: one row per shelf, or the grid's visual rows. */
   function rows(): HTMLElement[][] {
-    const grid = body.querySelector(".mb-grid");
+    const grid = body.querySelector(".sm-grid");
     if (grid) {
-      const cards = [...grid.querySelectorAll<HTMLElement>(".mb-card")];
+      const cards = [...grid.querySelectorAll<HTMLElement>(".sm-card")];
       const out: HTMLElement[][] = [];
       for (const c of cards) {
         const last = out[out.length - 1];
@@ -249,7 +268,7 @@ export async function mockBScreen(): Promise<Screen> {
       }
       return out;
     }
-    return [...body.querySelectorAll(".mb-track")].map((t) => [...t.querySelectorAll<HTMLElement>(".mb-card")]);
+    return [...body.querySelectorAll(".sm-track")].map((t) => [...t.querySelectorAll<HTMLElement>(".sm-card")]);
   }
   function focusCard(c: HTMLElement | undefined) {
     if (!c) return;
@@ -288,7 +307,9 @@ export async function mockBScreen(): Promise<Screen> {
       const k = e.key;
       if (openSong) {
         if (k === "Escape") { e.preventDefault(); close(); }
-        else if (k === "Enter" && !e.repeat && (document.activeElement === drawer.querySelector(".mb-play") || !drawer.contains(document.activeElement))) { e.preventDefault(); play(); }
+        else if (k === "Enter" && !e.repeat && (document.activeElement === drawer.querySelector(".sm-play") || !drawer.contains(document.activeElement))) { e.preventDefault(); play(); }
+        else if ((k === "a" || k === "A") && openSong.local && openSong.youtube) { e.preventDefault(); toggleSource(); }
+        else if ((k === "e" || k === "E") && openSong.local) { e.preventDefault(); edit(); }
         else if (k === "ArrowLeft" || k === "ArrowRight") {
           e.preventDefault();
           const i = SPEEDS.indexOf(speed) + (k === "ArrowLeft" ? -1 : 1);
@@ -310,7 +331,7 @@ export async function mockBScreen(): Promise<Screen> {
       }
       if (k === "/") { e.preventDefault(); search.focus(); return; }
       if (k.startsWith("Arrow")) { e.preventDefault(); moveFocus(k); return; }
-      if (k === "Escape") { e.preventDefault(); navigate("mocks"); return; }
+      if (k === "Escape") { e.preventDefault(); navigate(""); return; }
       // start typing anywhere to search
       if (k.length === 1 && /\S/.test(k) && !(document.activeElement instanceof HTMLButtonElement && k === " ")) search.focus();
     },

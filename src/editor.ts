@@ -3,9 +3,8 @@
 import { audioUrl, type Chart, type ChartLine } from "./chart";
 import { Player, audioCtx, click, loadBuffer } from "./audio";
 import { h } from "./dom";
-import { go, type Screen } from "./main";
+import { navigate, type Screen } from "./main";
 import { settings } from "./settings";
-import { selectScreen } from "./select";
 
 const SPEEDS = [0.5, 0.75, 1];
 const MIN_GAP = 0.05;
@@ -44,8 +43,6 @@ export async function editorScreen(source: Chart): Promise<Screen> {
   let clickTrack = true;
   let dirty = false;
   const undo: number[][] = [];
-  const aOff = settings.audioOffsetMs / 1000;
-  const vOff = (settings.audioOffsetMs - settings.visualOffsetMs) / 1000;
 
   // ---------- DOM ----------
   const canvas = h("canvas", { class: "ed-canvas" });
@@ -104,7 +101,7 @@ export async function editorScreen(source: Chart): Promise<Screen> {
   const chartTime = (pos: number) => pos * speed - off;
   const posOf = (t: number) => (t + off) / speed;
   function nowChart(): number {
-    return player.playing ? chartTime(player.time() - vOff) : head;
+    return player.playing ? chartTime(player.time()) : head;
   }
   function play(fromChart: number) {
     head = Math.max(0, fromChart);
@@ -339,12 +336,12 @@ export async function editorScreen(source: Chart): Promise<Screen> {
       else if (tapMode && (k.toLowerCase() === "f" || k.toLowerCase() === "j") && player.playing && !e.repeat) {
         e.preventDefault();
         snapshot();
-        setTime(sel, chartTime(player.timeOf(e) - aOff));
+        setTime(sel, chartTime(player.timeOf(e)));
         scheduled.add(sel);
         select(sel + 1);
       } else if (k === "Escape") {
         if (dirty && !confirm("Leave without saving your timing changes?")) return;
-        go(() => selectScreen());
+        navigate("play");
       }
     },
     destroy() {
