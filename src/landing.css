@@ -118,7 +118,8 @@
   padding: 20px 52px 20px 42px;
   font-size: 26px; font-weight: 700; letter-spacing: 0.01em;
   color: #121a45;
-  background: linear-gradient(180deg, #eef1ff, var(--pale));
+  /* a faint constellation pattern over the pale fill */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='76'%3E%3Cpath d='M8 52L24 34L44 42L58 20L76 28M44 42L52 64 M96 58L110 44L126 50L138 30' fill='none' stroke='%238f9de0' stroke-opacity='.28' stroke-width='.8'/%3E%3Cg fill='%238f9de0' fill-opacity='.45'%3E%3Ccircle cx='8' cy='52' r='1.2'/%3E%3Ccircle cx='24' cy='34' r='1.6'/%3E%3Ccircle cx='44' cy='42' r='1.2'/%3E%3Ccircle cx='58' cy='20' r='1.6'/%3E%3Ccircle cx='76' cy='28' r='1.2'/%3E%3Ccircle cx='96' cy='58' r='1.6'/%3E%3Ccircle cx='110' cy='44' r='1.2'/%3E%3Ccircle cx='126' cy='50' r='1.6'/%3E%3Ccircle cx='138' cy='30' r='1.2'/%3E%3Ccircle cx='52' cy='64' r='1.6'/%3E%3Ccircle cx='34' cy='10' r='0.8'/%3E%3Ccircle cx='70' cy='60' r='0.9'/%3E%3Ccircle cx='100' cy='14' r='0.8'/%3E%3Ccircle cx='150' cy='66' r='0.7'/%3E%3Ccircle cx='14' cy='18' r='0.7'/%3E%3Ccircle cx='88' cy='40' r='0.6'/%3E%3C/g%3E%3C/svg%3E") 4px 0 / 160px 76px, linear-gradient(180deg, #eef1ff, var(--pale));
   border: 0; border-radius: 999px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset, 0 10px 36px rgba(162, 139, 227, 0.32), 0 0 70px rgba(162, 139, 227, 0.16);
   transition: transform 0.15s ease, box-shadow 0.2s ease;
