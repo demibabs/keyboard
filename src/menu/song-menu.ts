@@ -149,8 +149,8 @@ export async function songMenuScreen(): Promise<Screen> {
     refresh(); // difficulty, tier and length change with speed
   }
 
-  function stat(label: string, value: Node | string) {
-    return h("div", { class: "sm-stat" }, h("span", { class: "sm-stat-label" }, label), h("span", { class: "sm-stat-value" }, value));
+  function stat(label: string, value: Node | string, title?: string) {
+    return h("div", { class: "sm-stat", title }, h("span", { class: "sm-stat-label" }, label), h("span", { class: "sm-stat-value" }, value));
   }
 
   function renderDetail() {
@@ -169,13 +169,12 @@ export async function songMenuScreen(): Promise<Screen> {
           h("p", { class: "sm-detail-artist" }, s.artist))),
       h("div", { class: "sm-speeds", role: "group", "aria-label": "Speed" }, ...SPEEDS.map((v) =>
         h("button", { class: `sm-speed${v === sp ? " on" : ""}`, "aria-pressed": String(v === sp), onclick: () => setSpeed(v) }, `${v}×`))),
+      h("div", { class: "sm-fill" }), // spare height is shared out evenly above and below the stats
       h("div", { class: "sm-stats" },
         stat("Needs", h("span", { class: d.cls }, `${d.needs} wpm`)),
-        stat("Hardest", `${d.burst} wpm`),
         stat("Length", lengthAt(s, sp)),
-        stat("Lines", String(s.lines)),
-        stat("Best", best ? `${best.grade} · ${pct(best.accuracy, 0)}` : "–"),
-        stat("Score", best ? fmtScore(best.score) : "–")),
+        stat("Best", best ? `${best.grade} · ${pct(best.accuracy, 0)}` : "–", best ? `Best score ${fmtScore(best.score)}` : undefined)),
+      h("div", { class: "sm-fill" }),
       h("button", { class: "sm-play", disabled: !src, onclick: () => startSong(s, sp) },
         h("span", { class: "sm-play-icon", "aria-hidden": "true" }), "Play"),
       h("p", { class: "sm-detail-foot" },
