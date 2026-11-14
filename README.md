@@ -36,7 +36,7 @@ For development, levels can also have local audio (`audio@<speed>.ogg`, pitch-pr
 - Speeds 0.5×–1.5× use YouTube's playback rate (or pre-rendered, pitch-preserved local audio). The difficulty shown is ~WPM needed at that speed.
 
 ## Screens
-Pages have hash addresses (`#/` home, `#/play` song menu; anything else is a 404 page), so they work on any static host; the game's own screens live under `#/play`. The home and 404 pages share a navbar (star on the left = home; Play and About on the right; About is a 404 for now).
+Pages have hash addresses (`#/` home, `#/play` song menu; anything else is a 404 page), so they work on any static host; the game's own screens live under `#/play`. The home and 404 pages share a navbar (on the left: star = home, Play, About; About is a 404 for now).
 - **Landing**: the hero (wordmark, tagline, Play). Its lyric cards type a short excerpt (the hook and the line after) of a few featured songs, stored in `src/landing.ts` so they show instantly; album art is linked from Apple's artwork CDN. Full lyrics are still only fetched at play time. Enter or Play opens the song list.
 - **Song select**: ↑↓ song, ←→ speed, Enter play, C calibrate; with local audio also A audio source, E chart editor.
 - **Play**: Esc pause (R restart, Q quit), Tab (while waiting for a line) skip ahead to 1 s before it, Enter results when done.
