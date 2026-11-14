@@ -178,11 +178,12 @@ export async function songMenuScreen(): Promise<Screen> {
       h("div", { class: "sm-action" },
         h("button", { class: "sm-play", disabled: !src, onclick: () => startSong(s, sp) },
           h("span", { class: "sm-play-icon", "aria-hidden": "true" }), "Play"),
-        h("p", { class: "sm-detail-foot" },
-        s.local && s.youtube
-          ? h("button", { class: "sm-source", onclick: () => toggleSource(), title: "Switch audio source (A)" },
-            src === "local" ? "Plays from local audio" : "Plays from YouTube")
-          : src === "youtube" ? "Plays from YouTube" : src === "local" ? "Plays from local audio" : "No audio available")),
+        // where the audio comes from: only worth showing when there's a choice (local audio, in dev)
+        s.local ? h("p", { class: "sm-detail-foot" },
+          s.youtube
+            ? h("button", { class: "sm-source", onclick: () => toggleSource(), title: "Switch audio source (A)" },
+              src === "local" ? "Plays from local audio" : "Plays from YouTube")
+            : "Plays from local audio") : ""),
     );
   }
 
