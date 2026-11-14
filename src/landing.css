@@ -89,9 +89,10 @@
 }
 /* the tight letter-spacing makes each glyph's ink spill past its own box, and a text-clipped background
    only paints inside the box: pad the box out (negative margins keep the letters where they are) */
-.wm-ch.star { padding: 0.12em; margin: 0 -0.12em; }
+.wm-ch.star { --pad: 0.12em; padding: var(--pad); margin: 0 calc(-1 * var(--pad)); }
 .wm-ch.cur::after { /* the cursor while the wordmark is being typed */
-  content: ""; position: absolute; left: 0.04em; right: 0.04em; bottom: -0.06em; height: 0.05em; border-radius: 1em;
+  content: ""; position: absolute; height: 0.05em; border-radius: 1em;
+  left: calc(var(--pad, 0em) + 0.04em); right: calc(var(--pad, 0em) + 0.04em); bottom: calc(var(--pad, 0em) - 0.06em);
   background: var(--gold); box-shadow: 0 0 10px rgba(253, 227, 145, 0.5);
 }
 .wm-caret {
