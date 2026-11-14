@@ -2,8 +2,7 @@
 // a couple of lines of a featured song (its hook and the line after) the way the game does.
 import "./landing.css";
 import { h } from "./dom";
-import { go, type Screen } from "./main";
-import { selectScreen } from "./select";
+import { navigate, type Screen } from "./main";
 
 interface Featured {
   id: string; title: string; artist: string; album: string; art: string;
@@ -219,6 +218,50 @@ function card(f: Featured, alive: () => boolean): HTMLElement {
   return Object.assign(el, { run, fit, show: (text: string) => build(text, line) });
 }
 
+// ---------- navbar: a strip of interlocking triangles in faint shades, over a violet floor line ----------
+let navPattern = "";
+function navTile(): string {
+  if (navPattern) return navPattern;
+  const r = rng(23);
+  const T = 32, W = 800, H = 64; // two rows of triangles, T wide and T tall (wide tile: the repeat is hard to spot)
+  let paths = "";
+  for (let row = 0; row < H / T; row++) {
+    const y = row * T, Y = y + T;
+    for (let x = -T / 2; x < W; x += T / 2) {
+      const up = (Math.round((x + T / 2) / (T / 2)) + row) % 2 === 0;
+      const d = up ? `M${x} ${Y}L${x + T / 2} ${y}L${x + T} ${Y}Z` : `M${x} ${y}L${x + T} ${y}L${x + T / 2} ${Y}Z`;
+      const light = r() < 0.5;
+      const o = light ? 0.015 + r() * 0.035 : 0.06 + r() * 0.14;
+      paths += `<path d='${d}' fill='${light ? "#ccd6ff" : "#03051a"}' fill-opacity='${o.toFixed(3)}'/>`;
+    }
+  }
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}'>${paths}</svg>`;
+  return (navPattern = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+}
+
+function navbar(): HTMLElement {
+  const nav = h("nav", { class: "navbar", "aria-label": "Main" },
+    h("div", { class: "nav-links" },
+      h("a", { class: "nav-home", href: "#/", "aria-label": "Home", title: "Home" }, sparkle("nav-star")),
+      h("a", { class: "nav-link", href: "#/play" }, "Play"),
+      h("a", { class: "nav-link", href: "#/about" }, "About")));
+  nav.style.setProperty("--nav-pattern", navTile());
+  return nav;
+}
+
+/** Shown for any address that isn't a page (yet). */
+export function notFoundScreen(): Screen {
+  const el = h("div", { class: "landing" },
+    sky(),
+    h("div", { class: "horizon", "aria-hidden": "true" }),
+    navbar(),
+    h("section", { class: "not-found" },
+      h("h1", { class: "nf-code" }, "404"),
+      h("p", { class: "tagline" }, "This page doesn't exist yet."),
+      h("a", { class: "nf-home", href: "#/" }, "Back home")));
+  return { el };
+}
+
 export function landingScreen(): Screen {
   let alive = true;
   const isAlive = () => alive;
@@ -235,11 +278,12 @@ export function landingScreen(): Screen {
   const letters = [...name].map((c, i) =>
     h("span", { class: i < 4 ? "wm-ch star" : "wm-ch", style: `z-index: ${name.length - i}` }, c));
   const word = h("span", { class: "wm-text" }, ...letters);
-  const play = () => go(() => selectScreen());
+  const play = () => navigate("play");
 
   const el = h("div", { class: "landing" },
     sky(),
     h("div", { class: "horizon", "aria-hidden": "true" }),
+    navbar(),
     h("section", { class: "hero" },
       h("div", { class: "hero-side left" }, cards[0], cards[1]),
       h("div", { class: "hero-center" },

@@ -11,7 +11,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME || un
 const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
 page.on("console", (m) => { if (m.type() === "error") console.log("console:", m.text()); });
 page.on("pageerror", (e) => console.log("pageerror:", e.message));
-await page.goto("http://localhost:5173/");
+await page.goto("http://localhost:5173/#/play");
 await page.waitForSelector(".song-card");
 await page.evaluate(([s, src]) => localStorage.setItem("startype:settings", JSON.stringify({ speed: s, audioOffsetMs: 0, visualOffsetMs: 0, levelId: "twilight-zone", volume: 0.8, audioSource: src })), [speed, process.env.YT ? "youtube" : "local"]);
 await page.reload();

@@ -1,12 +1,11 @@
 import { difficulty, flatten, loadLevelIds, type Chart } from "./chart";
 import { loadLevel, loadLocalIds, loadLyrics, skeleton, type Level } from "./lyrics";
 import { h, fmtScore, pct, tier } from "./dom";
-import { go, type Screen } from "./main";
+import { go, navigate, type Screen } from "./main";
 import { getBest, settings, saveSettings } from "./settings";
 import { messageScreen, playScreen, type AudioSource } from "./play";
 import { calibrateScreen } from "./calibrate";
 import { editorScreen } from "./editor";
-import { landingScreen } from "./landing";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5];
 
@@ -115,7 +114,7 @@ export async function selectScreen(): Promise<Screen> {
       } else if (k === "Enter") { play(); e.preventDefault(); }
       else if (k.toLowerCase() === "c") go(() => calibrateScreen());
       else if (k.toLowerCase() === "e") edit();
-      else if (k === "Escape") go(() => landingScreen());
+      else if (k === "Escape") navigate("");
       else if (k.toLowerCase() === "a" && local.size) {
         settings.audioSource = settings.audioSource === "local" ? "youtube" : "local";
         saveSettings(); render();

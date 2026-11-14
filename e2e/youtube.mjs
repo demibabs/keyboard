@@ -8,7 +8,7 @@ fs.mkdirSync("e2e/out", { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ["--autoplay-policy=no-user-gesture-required", "--mute-audio"] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
 page.on("pageerror", (e) => console.log("pageerror:", e.message));
-await page.goto("http://localhost:5173/");
+await page.goto("http://localhost:5173/#/play");
 await page.evaluate(([id, s]) => localStorage.setItem("startype:settings", JSON.stringify({ speed: s, levelId: id, audioSource: "youtube", volume: 0.8 })), [id, speed]);
 await page.reload();
 await page.waitForSelector(".song-card");
