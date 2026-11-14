@@ -87,6 +87,9 @@
   text-shadow: none;
   filter: drop-shadow(0 0 14px rgba(238, 206, 160, 0.22));
 }
+/* the tight letter-spacing makes each glyph's ink spill past its own box, and a text-clipped background
+   only paints inside the box: pad the box out (negative margins keep the letters where they are) */
+.wm-ch.star { padding: 0.12em; margin: 0 -0.12em; }
 .wm-ch.cur::after { /* the cursor while the wordmark is being typed */
   content: ""; position: absolute; left: 0.04em; right: 0.04em; bottom: -0.06em; height: 0.05em; border-radius: 1em;
   background: var(--gold); box-shadow: 0 0 10px rgba(253, 227, 145, 0.5);
