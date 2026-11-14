@@ -182,8 +182,7 @@ export async function songMenuScreen(): Promise<Screen> {
         s.local && s.youtube
           ? h("button", { class: "sm-source", onclick: () => toggleSource(), title: "Switch audio source (A)" },
             src === "local" ? "Plays from local audio" : "Plays from YouTube")
-          : src === "youtube" ? "Plays from YouTube" : src === "local" ? "Plays from local audio" : "No audio available",
-          h("span", {}, h("kbd", {}, "Enter"), " play  ", h("kbd", {}, "← →"), " speed", ...(s.local ? ["  ", h("kbd", {}, "E"), " edit timing"] : [])))),
+          : src === "youtube" ? "Plays from YouTube" : src === "local" ? "Plays from local audio" : "No audio available")),
     );
   }
 
