@@ -4,7 +4,7 @@ import { difficulty, flatten, loadLevelIds, type Chart } from "../chart";
 import { loadLevel, loadLocalIds, loadLyrics, skeleton, type Level } from "../lyrics";
 import { tier } from "../dom";
 import { go, type Screen } from "../main";
-import { getBest, settings, saveSettings, type Best } from "../settings";
+import { getBest, markPlayed, settings, saveSettings, type Best } from "../settings";
 import { messageScreen, playScreen, type AudioSource } from "../play";
 
 export const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5];
@@ -76,6 +76,7 @@ export function startSong(song: Song, speed: number): void {
   settings.levelId = song.id;
   settings.speed = speed;
   saveSettings();
+  markPlayed(song.id);
   go(async (): Promise<Screen> => {
     let chart: Chart;
     try { chart = await loadLyrics(song.level); } catch (err) {

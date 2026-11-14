@@ -1,4 +1,4 @@
-// Song menu (#/play), "Shelves": discovery like a music app. Rows of album covers (jump back in,
+// Song menu (#/play), "Shelves": discovery like a music app. Rows of album covers (recently played,
 // warm-ups, one per tier, more from an artist); searching swaps the rows for a grid of matches. A song
 // opens in a drawer (a bottom sheet on phones) to pick the speed and play. With local audio (dev) the
 // drawer can also switch the audio source and open the chart editor.
@@ -9,7 +9,7 @@ import { go, navigate, type Screen } from "../main";
 import { loadLyrics } from "../lyrics";
 import { editorScreen } from "../editor";
 import { navbar, rng, sky } from "../landing";
-import { settings, saveSettings } from "../settings";
+import { recentIds, settings, saveSettings } from "../settings";
 import {
   bestOf, difficultyOf, lengthAt, loadSongs, matches, sourceFor, startSong, SPEEDS, TIERS, type Song,
 } from "./songs";
@@ -115,8 +115,11 @@ export async function songMenuScreen(): Promise<Screen> {
     const by = (a: Song, b: Song) => difficultyOf(a, speed).needs - difficultyOf(b, speed).needs;
     const tierOf = (s: Song) => difficultyOf(s, speed).tier;
     const out: Shelf[] = [];
-    const played = songs.filter((s) => SPEEDS.some((sp) => bestOf(s, sp)));
-    if (played.length) out.push({ title: "Jump back in", songs: played });
+    // most recently played first, then songs with a score from before plays were tracked
+    const byId = new Map(songs.map((s) => [s.id, s]));
+    const recent = recentIds().map((id) => byId.get(id)).filter((s): s is Song => !!s);
+    const played = [...recent, ...songs.filter((s) => !recent.includes(s) && SPEEDS.some((sp) => bestOf(s, sp)))];
+    if (played.length) out.push({ title: "Recently played", songs: played });
     out.push({ title: "Warm-ups", sub: `Easy and Normal at ${speed}×`, songs: songs.filter((s) => tierOf(s) === "Easy" || tierOf(s) === "Normal").sort(by) });
     for (const t of TIERS.slice(2)) out.push({ title: t, sub: WPM_RANGE[t], songs: songs.filter((s) => tierOf(s) === t).sort(by) });
     const artists = new Map<string, Song[]>();

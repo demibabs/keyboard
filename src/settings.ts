@@ -42,3 +42,15 @@ export function recordBest(id: string, speed: number, b: Best): boolean {
   write(BEST, bests);
   return true;
 }
+
+// Recently played songs (ids, most recent first).
+const RECENT = "startype:recent";
+const recent: string[] = (() => { try { return JSON.parse(localStorage.getItem(RECENT) ?? "[]"); } catch { return []; } })();
+export function recentIds(): string[] { return recent; }
+export function markPlayed(id: string): void {
+  const i = recent.indexOf(id);
+  if (i >= 0) recent.splice(i, 1);
+  recent.unshift(id);
+  recent.length = Math.min(recent.length, 30);
+  write(RECENT, recent);
+}
