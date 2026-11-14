@@ -66,6 +66,7 @@
 .sm-arrow.prev::before { transform: translate(-35%, -50%) rotate(-135deg); }
 .sm-arrow:hover:not(:disabled) { background: rgba(204, 214, 255, 0.14); }
 .sm-arrow:disabled { opacity: 0.3; cursor: default; }
+.sm-arrows.none { visibility: hidden; }
 
 .sm-track {
   display: grid; grid-auto-flow: column; grid-auto-columns: 168px; gap: 20px;

@@ -158,20 +158,22 @@ export async function songMenuScreen(): Promise<Screen> {
     const track = h("div", { class: "sm-track" }, ...sh.songs.map(card));
     const prev = h("button", { class: "sm-arrow prev", "aria-label": `Scroll ${sh.title} left`, onclick: () => track.scrollBy({ left: -track.clientWidth * 0.8, behavior: "smooth" }) });
     const next = h("button", { class: "sm-arrow next", "aria-label": `Scroll ${sh.title} right`, onclick: () => track.scrollBy({ left: track.clientWidth * 0.8, behavior: "smooth" }) });
+    const arrows = h("div", { class: "sm-arrows" }, prev, next);
     const ends = () => {
       prev.disabled = track.scrollLeft < 4;
       next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 4;
       track.classList.toggle("more", !next.disabled);
+      arrows.classList.toggle("none", track.scrollWidth <= track.clientWidth + 4); // the shelf fits: no arrows at all
     };
     track.addEventListener("scroll", ends, { passive: true });
-    requestAnimationFrame(ends);
+    new ResizeObserver(ends).observe(track);
     draggable(track);
     return h("section", { class: "sm-shelf" },
       h("div", { class: "sm-shelf-head" },
         h("h2", {}, sh.title),
         sh.sub ? h("span", { class: "sm-shelf-sub" }, sh.sub) : "",
         h("span", { class: "sm-shelf-count" }, String(sh.songs.length)),
-        h("div", { class: "sm-arrows" }, prev, next)),
+        arrows),
       track);
   }
 
