@@ -12,7 +12,7 @@ CHROME=/path/to/chrome node e2e/youtube.mjs <id>  # checks the game clock agains
 ```
 
 ## What's in the repo (and what isn't)
-The repo ships no song audio and no lyric text. Each level is `public/levels/<id>/level.json`:
+The repo ships no song audio and no song lyrics (apart from the short excerpts on the landing page). Each level is `public/levels/<id>/level.json`:
 - the [LRCLIB](https://lrclib.net) entry id, with a hash of the lyric text the level was timed for;
 - the start time of each line and how many characters it types (for the song list's difficulty);
 - the YouTube video the timing matches (`youtube.id`, `offsetMs` = video time of chart time 0).
@@ -36,7 +36,7 @@ For development, levels can also have local audio (`audio@<speed>.ogg`, pitch-pr
 - Speeds 0.5×–1.5× use YouTube's playback rate (or pre-rendered, pitch-preserved local audio). The difficulty shown is ~WPM needed at that speed.
 
 ## Screens
-- **Landing**: the hero (wordmark, tagline, Play). Its lyric cards type the hook of a few featured songs; the lines are fetched from LRCLIB at runtime like the game's, album art is linked from Apple's artwork CDN. Enter or Play opens the song list.
+- **Landing**: the hero (wordmark, tagline, Play). Its lyric cards type a short excerpt (the hook and the line after) of a few featured songs, stored in `src/landing.ts` so they show instantly; album art is linked from Apple's artwork CDN. Full lyrics are still only fetched at play time. Enter or Play opens the song list.
 - **Song select**: ↑↓ song, ←→ speed, Enter play, C calibrate; with local audio also A audio source, E chart editor.
 - **Play**: Esc pause (R restart, Q quit), Tab (while waiting for a line) skip ahead to 1 s before it, Enter results when done.
 - **Calibrate**: audio test (tap to clicks) sets the judging offset; visual test (tap to flashes) lines the visuals up with the audio.

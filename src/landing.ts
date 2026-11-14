@@ -1,11 +1,8 @@
 // Landing page hero: the wordmark, tagline and Play button, with lyric cards on the sides that type out
-// a line of a featured song the way the game does. Lyric text is fetched from LRCLIB at runtime (like the
-// game), so none is stored here: each card types the song's most repeated line (usually the hook).
+// a couple of lines of a featured song (its hook and the line after) the way the game does.
 import "./landing.css";
-import { flatten, typedOf, type Chart } from "./chart";
 import { h } from "./dom";
 import { go, type Screen } from "./main";
-import { loadLevel, loadLyrics } from "./lyrics";
 import { selectScreen } from "./select";
 
 interface Featured {
@@ -14,36 +11,27 @@ interface Featured {
   tilt: number; // degrees
   size: number; // scale of the card (width and text)
   slips: number; // share of lines typed with a mistake or an autocorrection
+  lines: string[]; // short excerpt: the hook and the line after it
 }
 const ART = "https://is1-ssl.mzstatic.com/image/thumb/";
 const FEATURED: Featured[] = [
   { id: "coldplay-yellow", title: "Yellow", artist: "Coldplay", album: "Parachutes",
     art: ART + "Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/160x160bb.jpg",
-    tint: "253, 200, 120", tilt: -3.5, size: 1.08, slips: 0.25 },
+    tint: "253, 200, 120", tilt: -3.5, size: 1.08, slips: 0.25,
+    lines: ["Look how they shine for you", "And everything you do"] },
   { id: "oasis-wonderwall", title: "Wonderwall", artist: "Oasis", album: "(What's the Story) Morning Glory?",
     art: ART + "Music113/v4/04/92/e0/0492e08b-cbcc-9969-9ad6-8f5a0888068c/5051961007107.jpg/160x160bb.jpg",
-    tint: "120, 205, 255", tilt: 2.5, size: 0.9, slips: 0.6 },
+    tint: "120, 205, 255", tilt: 2.5, size: 0.9, slips: 0.6,
+    lines: ["You're gonna be the one that saves me", "And after all"] },
   { id: "billie-eilish-birds-of-a-feather", title: "Birds of a Feather", artist: "Billie Eilish", album: "Hit Me Hard and Soft",
     art: ART + "Music211/v4/92/9f/69/929f69f1-9977-3a44-d674-11f70c852d1b/24UMGIM36186.rgb.jpg/160x160bb.jpg",
-    tint: "214, 150, 255", tilt: 4, size: 1, slips: 0.6 },
+    tint: "214, 150, 255", tilt: 4, size: 1, slips: 0.6,
+    lines: ["I said I'd never think I wasn't better alone", "Can't change the weather, might not be forever"] },
 ];
 
 const SVG = "http://www.w3.org/2000/svg";
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-/** The song's hook (most repeated line of a comfortable length) and the line after it. */
-export function hookLines(chart: Chart): string[] {
-  const lines = flatten(chart).lines.map((l) => ({ text: l.text, n: l.end - l.first, key: typedOf(l.text.replace(/\([^)]*\)/g, "")) }));
-  const ok = (l: { n: number }) => l.n >= 14 && l.n <= 44;
-  const count = new Map<string, number>();
-  for (const l of lines) if (ok(l)) count.set(l.key, (count.get(l.key) ?? 0) + 1);
-  let best = -1;
-  lines.forEach((l, i) => { if (ok(l) && (best < 0 || count.get(l.key)! > count.get(lines[best].key)!)) best = i; });
-  if (best < 0) return [];
-  const next = lines.slice(best + 1).find((l) => l.key !== lines[best].key && l.n <= 48);
-  return next ? [lines[best].text, next.text] : [lines[best].text];
-}
 
 // ---------- background: stars and faint constellations (seeded, so it's the same every visit) ----------
 function rng(seed: number) {
@@ -97,35 +85,48 @@ function sparkle(cls: string): SVGSVGElement {
 
 // ---------- lyric cards ----------
 function card(f: Featured, alive: () => boolean): HTMLElement {
-  const line = h("div", { class: "lc-line loading" }, h("span", { class: "lc-skeleton" }));
+  const line = h("div", { class: "lc-line" });
   const fill = h("div", { class: "lc-timer-fill" });
   const el = h("article", { class: "lyric-card", "aria-label": `${f.title} by ${f.artist}` },
     h("img", { class: "lc-art", src: f.art, alt: `${f.album} cover`, width: 48, height: 48, loading: "lazy" }),
     line,
     h("div", { class: "lc-foot" }, h("div", { class: "lc-timer" }, fill)));
 
+  /** Lay a line of text out in `into` (letters of a word kept together, as in the game). */
+  function build(text: string, into: HTMLElement) {
+    const chars = [...text].map((c) => ({ c, span: h("span", { class: "lc-ch" }, c === " " ? "\u00a0" : c), paren: false }));
+    let depth = 0;
+    for (const ch of chars) {
+      if (ch.c === "(") depth++;
+      ch.paren = depth > 0;
+      if (ch.c === ")" && depth) depth--;
+      if (ch.paren) ch.span.classList.add("paren");
+    }
+    into.replaceChildren();
+    let word: HTMLElement | null = null;
+    for (const ch of chars) {
+      if (ch.c === " ") { word = null; into.append(ch.span); continue; }
+      if (!word) into.append((word = h("span", { class: "lc-word" })));
+      word.append(ch.span);
+    }
+    return chars.filter((ch) => !ch.paren);
+  }
+
+  /** Size the line for the tallest of its texts, so the card never changes size (measured off to the side). */
+  function fit(texts: string[]) {
+    const probe = h("div", { class: "lc-line lc-probe" });
+    probe.style.width = `${line.clientWidth}px`;
+    el.append(probe);
+    let max = 0;
+    for (const t of texts) { build(t, probe); max = Math.max(max, probe.offsetHeight); }
+    probe.remove();
+    line.style.minHeight = `${max}px`;
+  }
+
   async function run(texts: string[]) {
-    line.classList.remove("loading");
     for (let k = 0; alive(); k = (k + 1) % texts.length) {
-      const text = texts[k];
-      const chars = [...text].map((c, i) => ({ c, span: h("span", { class: "lc-ch" }, c === " " ? " " : c), paren: false, i }));
-      let depth = 0;
-      for (const ch of chars) {
-        if (ch.c === "(") depth++;
-        ch.paren = depth > 0;
-        if (ch.c === ")" && depth) depth--;
-        if (ch.paren) ch.span.classList.add("paren");
-      }
-      // words stay together so a line only wraps between words (as in the game)
-      line.replaceChildren();
-      let word: HTMLElement | null = null;
-      for (const ch of chars) {
-        if (ch.c === " ") { word = null; line.append(ch.span); continue; }
-        if (!word) line.append((word = h("span", { class: "lc-word" })));
-        word.append(ch.span);
-      }
+      const typeable = build(texts[k], line);
       el.classList.remove("done", "out");
-      const typeable = chars.filter((ch) => !ch.paren);
       if (reduceMotion()) {
         typeable.forEach((ch) => ch.span.classList.add("ok"));
         el.classList.add("done");
@@ -167,7 +168,7 @@ function card(f: Featured, alive: () => boolean): HTMLElement {
       await sleep(450);
     }
   }
-  return Object.assign(el, { run });
+  return Object.assign(el, { run, fit, show: (text: string) => build(text, line) });
 }
 
 export function landingScreen(): Screen {
@@ -217,24 +218,35 @@ export function landingScreen(): Screen {
     wordmark.classList.add("typed");
   })();
 
-  // cards: fetch each song's lyrics, then loop its lines (staggered); drop a card if LRCLIB can't be reached
-  FEATURED.forEach(async (f, i) => {
-    const c = cards[i] as HTMLElement & { run(t: string[]): Promise<void> };
-    try {
-      const texts = hookLines(await loadLyrics(await loadLevel(f.id)));
-      if (!texts.length) throw new Error("no line");
-      await sleep(900 + i * 1300);
+  // cards: once the font is in, size each card for its longest line, show them, and loop their lines (staggered)
+  type Card = HTMLElement & { run(t: string[]): Promise<void>; fit(t: string[]): void; show(t: string): void };
+  const live: { c: Card; texts: string[] }[] = [];
+  const refit = () => live.forEach(({ c, texts }) => c.fit(texts));
+  let resizeTimer = 0;
+  const onResize = () => { clearTimeout(resizeTimer); resizeTimer = window.setTimeout(refit, 150); };
+  (async () => {
+    await document.fonts.ready;
+    if (!alive) return;
+    FEATURED.forEach((f, i) => live.push({ c: cards[i] as Card, texts: f.lines }));
+    for (const { c, texts } of live) { c.fit(texts); c.show(texts[0]); c.classList.add("shown"); }
+    window.addEventListener("resize", onResize);
+    document.fonts.addEventListener("loadingdone", onResize); // a late web font changes line widths
+    live.forEach(async ({ c, texts }, i) => {
+      await sleep(700 + i * 1300);
       if (alive) await c.run(texts);
-    } catch {
-      c.remove();
-    }
-  });
+    });
+  })();
 
   return {
     el,
     onKey(e) {
       if (e.key === "Enter" && !e.repeat) { e.preventDefault(); play(); }
     },
-    destroy() { alive = false; },
+    destroy() {
+      alive = false;
+      window.removeEventListener("resize", onResize);
+      document.fonts.removeEventListener("loadingdone", onResize);
+      clearTimeout(resizeTimer);
+    },
   };
 }
