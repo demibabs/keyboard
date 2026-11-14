@@ -22,6 +22,7 @@ export interface Level {
   /** per cleaned LRC line: [start (chart seconds), typed characters]; 0 = blank (end of vocals), -1 = nothing to type */
   lines: [number, number][];
   youtube?: YouTubeRef;
+  art?: string; // album art URL (linked, not stored)
   source?: string;
 }
 
@@ -74,6 +75,7 @@ export function levelOf(chart: Chart, youtube?: YouTubeRef): Level {
     lines: chart.lines.map((l, i) => [l.t, counts.get(i) ?? (l.text.trim() ? -1 : 0)]),
   };
   if (youtube) level.youtube = youtube;
+  if (chart.art) level.art = chart.art;
   if (chart.source) level.source = chart.source;
   return level;
 }
@@ -82,7 +84,7 @@ function baseChart(level: Level, lines: ChartLine[]): Chart {
   return {
     format: 2, id: level.id, version: level.version, title: level.title, artist: level.artist,
     duration: level.duration, offsetMs: level.offsetMs, speeds: SPEEDS, audio: "audio@{speed}.ogg",
-    source: level.source, youtube: level.youtube, lines,
+    source: level.source, youtube: level.youtube, art: level.art, lines,
   };
 }
 

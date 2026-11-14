@@ -207,7 +207,7 @@
 }
 .lyric-card.out .lc-line { opacity: 0; }
 .lc-word { display: inline-flex; white-space: nowrap; }
-.lc-probe { position: absolute; visibility: hidden; pointer-events: none; top: 0; left: 0; min-height: 0; }
+.lyric-card > .lc-probe { position: absolute; visibility: hidden; pointer-events: none; top: 0; left: 0; min-height: 0; }
 .lc-ch { color: var(--pale-dim); position: relative; transition: color 0.08s; }
 .lc-ch.paren { color: var(--pale-faint); font-style: italic; }
 .lc-ch.ok { color: #f6f7ff; }

@@ -19,6 +19,7 @@ export interface Chart {
   source?: string; // where the timing came from
   youtube?: { id: string; offsetMs: number; duration?: number };
   note?: string; // shown on the play screen (e.g. timing may be off)
+  art?: string; // album art URL
 }
 
 /** The characters a player types for a piece of display text: lowercase letters and digits only. */

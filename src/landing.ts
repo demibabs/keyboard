@@ -162,17 +162,25 @@ function card(f: Featured, alive: () => boolean): HTMLElement {
   /** Size the line for the tallest of its texts, so the card never changes size (measured off to the side). */
   function fit(texts: string[]) {
     const probe = h("div", { class: "lc-line lc-probe" });
-    probe.style.width = `${line.clientWidth}px`;
+    probe.style.width = getComputedStyle(line).width; // exact (fractional) width, not a rounded one
     el.append(probe);
     let max = 0;
     for (const t of texts) { build(t, probe); max = Math.max(max, probe.offsetHeight); }
     probe.remove();
     line.style.minHeight = `${max}px`;
   }
+  /** Safety net: if a line still comes out taller than reserved, reserve that from now on (so it happens once). */
+  function hold() {
+    const reserved = parseFloat(line.style.minHeight) || 0;
+    line.style.minHeight = "0px";
+    const need = line.offsetHeight;
+    line.style.minHeight = `${Math.max(reserved, need)}px`;
+  }
 
   async function run(texts: string[]) {
     for (let k = 0; alive(); k = (k + 1) % texts.length) {
       const typeable = build(texts[k], line);
+      hold();
       el.classList.remove("done", "out");
       if (reduceMotion()) {
         typeable.forEach((ch) => ch.span.classList.add("ok"));
@@ -323,10 +331,15 @@ export function landingScreen(): Screen {
   let resizeTimer = 0;
   const onResize = () => { clearTimeout(resizeTimer); resizeTimer = window.setTimeout(refit, 150); };
   (async () => {
+    // measure with the real font: load the exact faces used (fonts.ready alone can resolve before a face is requested)
+    await Promise.all(["500 20px Outfit", "700 100px Outfit"].map((f) => document.fonts.load(f).catch(() => null)));
     await document.fonts.ready;
     if (!alive) return;
     FEATURED.forEach((f, i) => live.push({ c: cards[i] as Card, texts: f.lines }));
-    for (const { c, texts } of live) { c.fit(texts); c.show(texts[0]); c.classList.add("shown"); }
+    for (const { c, texts } of live) {
+      c.fit(texts); c.show(texts[0]); c.classList.add("shown");
+      if (import.meta.env.DEV) (c as unknown as { __texts: string[] }).__texts = texts; // for e2e checks
+    }
     window.addEventListener("resize", onResize);
     document.fonts.addEventListener("loadingdone", onResize); // a late web font changes line widths
     live.forEach(async ({ c, texts }, i) => {
