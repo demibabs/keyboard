@@ -11,7 +11,7 @@ import type { Chart } from "../src/chart.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..", "public", "levels");
 const SPEEDS = ["0.50", "0.75", "1.00", "1.25", "1.50"];
-const UA = "keyboard/0.1 (typing rhythm game)";
+const UA = "startype/0.1 (typing rhythm game)";
 
 const file = (id: string, name: string) => path.join(ROOT, id, name);
 const readJson = <T>(p: string): T | undefined => (fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : undefined);

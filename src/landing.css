@@ -1,0 +1,174 @@
+/* Landing page: a night sky — deep navy to indigo, faint constellations, a violet horizon glow, pale
+   periwinkle and a little gold. */
+.landing {
+  --sky-0: #111a42;
+  --sky-1: #17205a;
+  --sky-2: #1f1b58;
+  --ground: #110c27;
+  --pale: #ccd6ff;
+  --pale-dim: rgba(204, 214, 255, 0.34);
+  --pale-faint: rgba(204, 214, 255, 0.16);
+  --violet: #a28be3;
+  --gold: #fde391;
+  --card: rgba(22, 30, 82, 0.58);
+  --card-line: rgba(204, 214, 255, 0.14);
+
+  position: relative;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--sky-0) 0%, var(--sky-1) 42%, var(--sky-2) 72%, #19134a 84%, var(--ground) 100%);
+  color: #eef1ff;
+}
+
+/* ---------- sky ---------- */
+.landing .sky { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.sky .star { fill: #e6ebff; }
+.sky .twinkle { animation: twinkle 6s ease-in-out infinite; }
+.sky .constellation { fill: none; stroke: rgba(170, 182, 255, 0.16); stroke-width: 1; }
+.sky .node { fill: #dfe5ff; opacity: 0.75; }
+@keyframes twinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.9; } }
+
+.horizon {
+  position: absolute; left: 0; right: 0; bottom: 11%; height: 2px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--violet) 18%, #c6b5ff 50%, var(--violet) 82%, transparent);
+  box-shadow: 0 0 18px 2px rgba(162, 139, 227, 0.55), 0 0 60px 8px rgba(162, 139, 227, 0.18);
+  opacity: 0.8;
+}
+.horizon::after { /* the ground below the horizon */
+  content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 30vh;
+  background: linear-gradient(180deg, rgba(17, 12, 39, 0.65), var(--ground) 40%);
+}
+
+/* ---------- layout ---------- */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+  padding: 48px clamp(16px, 4vw, 56px) 15vh;
+}
+.hero-center { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.hero-side { display: flex; flex-direction: column; gap: 44px; }
+.hero-side.left { align-items: flex-end; }
+.hero-side.right { align-items: flex-start; }
+.hero-side.left .lyric-card:nth-child(2) { margin-right: 56px; }
+.hero-side.right .lyric-card:nth-child(1) { margin-left: 56px; }
+
+/* ---------- wordmark ---------- */
+.wordmark {
+  position: relative;
+  margin: 0;
+  font-size: clamp(64px, 10vw, 132px);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: #f4f6ff;
+  text-shadow: 0 0 40px rgba(162, 139, 227, 0.35);
+  min-height: 1em;
+  white-space: nowrap;
+}
+.wm-caret {
+  display: inline-block; width: 0.06em; height: 0.78em; margin-left: 0.06em; vertical-align: -0.02em;
+  background: var(--gold); border-radius: 2px; box-shadow: 0 0 14px rgba(253, 227, 145, 0.6);
+  animation: caret 1.1s steps(1) infinite;
+}
+@keyframes caret { 50% { opacity: 0; } }
+.wm-star {
+  position: absolute; top: -0.12em; right: -0.32em; width: 0.2em; height: 0.2em;
+  fill: var(--gold); filter: drop-shadow(0 0 8px rgba(253, 227, 145, 0.7));
+  animation: glint 5s ease-in-out infinite;
+}
+@keyframes glint { 0%, 100% { transform: scale(0.75) rotate(0deg); opacity: 0.7; } 50% { transform: scale(1) rotate(45deg); opacity: 1; } }
+
+.tagline { margin: 22px 0 0; font-size: clamp(18px, 2vw, 22px); font-weight: 400; color: var(--pale); opacity: 0.85; letter-spacing: 0.01em; }
+
+/* ---------- play ---------- */
+.hero-play {
+  margin-top: 44px;
+  display: inline-flex; align-items: center; gap: 16px;
+  padding: 20px 52px 20px 42px;
+  font-size: 26px; font-weight: 700; letter-spacing: 0.01em;
+  color: #121a45;
+  background: linear-gradient(180deg, #eef1ff, var(--pale));
+  border: 0; border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset, 0 10px 40px rgba(162, 139, 227, 0.45), 0 0 80px rgba(162, 139, 227, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.hero-play:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset, 0 14px 50px rgba(162, 139, 227, 0.6), 0 0 100px rgba(253, 227, 145, 0.18); }
+.hero-play:active { transform: translateY(0); }
+.hero-play:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.hero-play-icon { width: 0; height: 0; border-style: solid; border-width: 11px 0 11px 18px; border-color: transparent transparent transparent #121a45; }
+.hero-hint { margin: 16px 0 0; font-size: 14px; color: var(--pale-dim); }
+.hero-hint kbd { background: rgba(204, 214, 255, 0.08); border-color: var(--card-line); color: var(--pale); }
+
+/* ---------- lyric cards (a simplified play screen) ---------- */
+.lyric-card {
+  position: relative;
+  width: min(320px, 100%);
+  padding: 16px 20px 16px;
+  background: var(--card);
+  border: 1px solid var(--card-line);
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 20px 50px rgba(5, 6, 30, 0.45);
+  animation: drift 9s ease-in-out infinite;
+}
+.hero-side .lyric-card:nth-child(2) { animation-delay: -4.5s; }
+.hero-side.right .lyric-card:nth-child(1) { animation-delay: -2s; }
+@keyframes drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.lc-art {
+  position: absolute; top: -14px; right: -14px; width: 48px; height: 48px;
+  border-radius: 10px; object-fit: cover; background: var(--sky-1);
+  border: 2px solid rgba(17, 26, 66, 0.9); box-shadow: 0 6px 18px rgba(5, 6, 30, 0.5);
+}
+.lc-head { display: flex; flex-direction: column; gap: 1px; padding-right: 36px; }
+.lc-title { font-size: 13px; font-weight: 600; color: var(--pale); }
+.lc-artist { font-size: 12px; color: var(--pale-dim); }
+.lc-line {
+  margin-top: 14px; min-height: 2.7em;
+  font-size: 20px; font-weight: 500; line-height: 1.35; letter-spacing: 0.01em;
+  transition: opacity 0.4s ease;
+}
+.lyric-card.out .lc-line { opacity: 0; }
+.lc-word { display: inline-flex; white-space: nowrap; }
+.lc-ch { color: var(--pale-dim); position: relative; transition: color 0.08s; }
+.lc-ch.paren { color: var(--pale-faint); font-style: italic; }
+.lc-ch.ok { color: #f6f7ff; }
+.lc-ch.cursor::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; border-radius: 2px;
+  background: var(--gold); box-shadow: 0 0 8px rgba(253, 227, 145, 0.7);
+}
+.lc-line.loading { display: flex; align-items: center; }
+.lc-skeleton { display: block; width: 80%; height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--pale-faint), rgba(204, 214, 255, 0.28), var(--pale-faint)); background-size: 200% 100%; animation: shimmer 1.6s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.lc-foot { display: flex; align-items: center; gap: 12px; margin-top: 12px; height: 18px; }
+.lc-timer { flex: 1; height: 3px; border-radius: 3px; background: rgba(204, 214, 255, 0.1); overflow: hidden; }
+.lc-timer-fill { height: 100%; transform-origin: left; transform: scaleX(1); background: linear-gradient(90deg, var(--violet), var(--pale)); border-radius: 3px; }
+.lc-tag {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold);
+  opacity: 0; transform: translateY(4px); transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.lyric-card.done .lc-tag { opacity: 1; transform: none; }
+.lyric-card.out .lc-tag { opacity: 0; }
+
+/* ---------- smaller screens: cards go under the hero ---------- */
+@media (max-width: 1100px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding-top: 12vh; gap: 56px; }
+  .hero-center { order: -1; }
+  .hero-side, .hero-side.left, .hero-side.right { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 32px; }
+  .hero-side.left .lyric-card:nth-child(2), .hero-side.right .lyric-card:nth-child(1) { margin: 0; }
+  .hero-side.right { margin-top: -24px; }
+  .horizon { position: fixed; bottom: 7%; }
+}
+@media (max-width: 640px) {
+  .hero { padding-top: 10vh; gap: 40px; }
+  .hero-side .lyric-card:nth-child(2) { display: none; }
+  .hero-play { padding: 18px 44px 18px 36px; font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky .twinkle, .wm-star, .lyric-card, .wm-caret, .lc-skeleton { animation: none; }
+}

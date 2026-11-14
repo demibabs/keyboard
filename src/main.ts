@@ -1,5 +1,5 @@
 import { audioCtx } from "./audio";
-import { selectScreen } from "./select";
+import { landingScreen } from "./landing";
 
 export interface Screen {
   el: HTMLElement;
@@ -47,4 +47,4 @@ window.addEventListener("pointerdown", () => {
   if (audioCtx().state === "suspended") void audioCtx().resume();
 });
 
-go(() => selectScreen());
+go(() => landingScreen());

@@ -12,7 +12,7 @@ import argparse, difflib, glob, json, os, re, subprocess, sys, tempfile, urllib.
 
 SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5]
 API = "https://lrclib.net/api"
-UA = "keyboard/0.1 (typing rhythm game)"
+UA = "startype/0.1 (typing rhythm game)"
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "public", "levels")
 VENV_PY = os.path.expanduser("~/.cache/lyric-align/.venv/bin/python")

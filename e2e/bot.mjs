@@ -13,7 +13,7 @@ page.on("console", (m) => { if (m.type() === "error") console.log("console:", m.
 page.on("pageerror", (e) => console.log("pageerror:", e.message));
 await page.goto("http://localhost:5173/");
 await page.waitForSelector(".song-card");
-await page.evaluate(([s, src]) => localStorage.setItem("keyboard:settings", JSON.stringify({ speed: s, audioOffsetMs: 0, visualOffsetMs: 0, levelId: "twilight-zone", volume: 0.8, audioSource: src })), [speed, process.env.YT ? "youtube" : "local"]);
+await page.evaluate(([s, src]) => localStorage.setItem("startype:settings", JSON.stringify({ speed: s, audioOffsetMs: 0, visualOffsetMs: 0, levelId: "twilight-zone", volume: 0.8, audioSource: src })), [speed, process.env.YT ? "youtube" : "local"]);
 await page.reload();
 await page.waitForSelector(".song-card");
 await page.screenshot({ path: "e2e/out/select.png" });

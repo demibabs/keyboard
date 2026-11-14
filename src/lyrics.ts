@@ -107,7 +107,7 @@ export function chartWithLyrics(level: Level, lrc: string): Chart {
 
 // ---------- fetching (browser) ----------
 const API = "https://lrclib.net/api/get/";
-const CACHE = "keyboard:lrc:";
+const CACHE = "startype:lrc:";
 
 async function fetchLrc(id: number): Promise<string> {
   let r: Response;

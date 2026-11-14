@@ -9,14 +9,19 @@ export interface Settings {
 }
 export interface Best { score: number; grade: string; accuracy: number; fc: boolean }
 
-const KEY = "keyboard:settings";
-const BEST = "keyboard:best-v2"; // v2: accuracy + line-bonus scoring (old timing-based bests aren't comparable)
-const OLD_NAME: Record<string, string> = { [KEY]: "lyric-typer:settings", [BEST]: "lyric-typer:best-v2" }; // before the rename
+const KEY = "startype:settings";
+const BEST = "startype:best-v2"; // v2: accuracy + line-bonus scoring (old timing-based bests aren't comparable)
+// names used before the renames (Lyric Typer, then Keyboard), newest first
+const OLD_NAMES: Record<string, string[]> = {
+  [KEY]: ["keyboard:settings", "lyric-typer:settings"],
+  [BEST]: ["keyboard:best-v2", "lyric-typer:best-v2"],
+};
 const defaults: Settings = { audioOffsetMs: 0, visualOffsetMs: 0, volume: 0.8, speed: 0.75, levelId: "", audioSource: "local" };
 
 function read<T>(k: string, fallback: T): T {
   try {
-    const v = localStorage.getItem(k) ?? (OLD_NAME[k] ? localStorage.getItem(OLD_NAME[k]) : null);
+    let v = localStorage.getItem(k);
+    for (const old of OLD_NAMES[k] ?? []) v ??= localStorage.getItem(old);
     return v ? { ...fallback, ...JSON.parse(v) } : fallback;
   } catch { return fallback; }
 }

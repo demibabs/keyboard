@@ -6,6 +6,7 @@ import { getBest, settings, saveSettings } from "./settings";
 import { messageScreen, playScreen, type AudioSource } from "./play";
 import { calibrateScreen } from "./calibrate";
 import { editorScreen } from "./editor";
+import { landingScreen } from "./landing";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5];
 
@@ -28,11 +29,11 @@ export async function selectScreen(): Promise<Screen> {
 
   const el = h("div", { class: "select" },
     h("header", { class: "brand" },
-      h("h1", {}, "Key", h("span", {}, "board")),
+      h("h1", {}, "star", h("span", {}, "type")),
       h("p", {}, "Type every lyric the moment it's sung.")),
     h("main", { class: "select-main" }, list, detail),
     h("footer", { class: "keys" },
-      key("↑↓", "song"), key("←→", "speed"), key("Enter", "play"), key("C", "calibrate"),
+      key("↑↓", "song"), key("←→", "speed"), key("Enter", "play"), key("C", "calibrate"), key("Esc", "home"),
       ...(local.size ? [key("A", "audio source"), key("E", "chart editor")] : [])),
   );
 
@@ -114,6 +115,7 @@ export async function selectScreen(): Promise<Screen> {
       } else if (k === "Enter") { play(); e.preventDefault(); }
       else if (k.toLowerCase() === "c") go(() => calibrateScreen());
       else if (k.toLowerCase() === "e") edit();
+      else if (k === "Escape") go(() => landingScreen());
       else if (k.toLowerCase() === "a" && local.size) {
         settings.audioSource = settings.audioSource === "local" ? "youtube" : "local";
         saveSettings(); render();

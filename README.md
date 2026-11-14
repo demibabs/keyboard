@@ -1,4 +1,4 @@
-# Keyboard
+# startype
 
 A typing rhythm game: each level is a song, and you type each lyric line as it's sung.
 
@@ -36,6 +36,7 @@ For development, levels can also have local audio (`audio@<speed>.ogg`, pitch-pr
 - Speeds 0.5×–1.5× use YouTube's playback rate (or pre-rendered, pitch-preserved local audio). The difficulty shown is ~WPM needed at that speed.
 
 ## Screens
+- **Landing**: the hero (wordmark, tagline, Play). Its lyric cards type the hook of a few featured songs; the lines are fetched from LRCLIB at runtime like the game's, album art is linked from Apple's artwork CDN. Enter or Play opens the song list.
 - **Song select**: ↑↓ song, ←→ speed, Enter play, C calibrate; with local audio also A audio source, E chart editor.
 - **Play**: Esc pause (R restart, Q quit), Tab (while waiting for a line) skip ahead to 1 s before it, Enter results when done.
 - **Calibrate**: audio test (tap to clicks) sets the judging offset; visual test (tap to flashes) lines the visuals up with the audio.
