@@ -1,11 +1,11 @@
-// The play screen's sky: rows of dots gliding through the night along curving paths, over a gradient that
-// shifts from the classic blue through purple to pink as the song builds. Driven by
-// public/levels/<id>/viz.json (charting/analyze.py); without it, a calm default.
+// The play screen's sky: rows of dots gliding slowly along curving paths on a plane tilted away from the
+// player, over a gradient with drifting glows that shifts from the classic blue through purple to pink as
+// the song builds. Driven by public/levels/<id>/viz.json (charting/analyze.py); without it, a calm default.
 //  - each row has its own spacing, speed, direction and curve; spacing breathes and varies along the row
-//  - louder = faster flow and deeper curves; on each beat the dots swell together; big hits make it surge
+//  - louder = faster flow and deeper curves; on each beat the dots swell a little; big hits make it surge
 //  - finishing a line clean makes the dots near its end flare up
-// Cheap by design: one WebGL draw call (every dot's position is worked out on the GPU), and the sky
-// colours are CSS custom properties on the play screen, updated a few times a second.
+// Cheap by design: two WebGL draws a frame (the sky, then every dot, positioned on the GPU) on a canvas at
+// normal (1x) resolution; no CSS repaints.
 
 export interface Viz {
   fps: number;
@@ -39,9 +39,10 @@ function palette(c: number) {
 const approach = (cur: number, target: number, rate: number, dt: number) => cur + (target - cur) * (1 - Math.exp(-rate * dt));
 
 const MAX_FLARES = 4;
-const ROWS = 16;
-const PER_ROW = 220; // dots allocated per row (enough for the widest screens at the tightest spacing)
+const ROWS = 10;
+const PER_ROW = 240; // dots allocated per row (enough for the widest screens at the tightest spacing)
 const FLARE_LIFE = 1.4; // s
+const TILT = 0.6; // how far the dot plane leans away (top rows drawn at 1/(1 + TILT) scale)
 
 // The field: ROWS streams of dots, each gliding along its own curving wave. Every row has its own spacing,
 // speed, direction, curve and size, so the whole thing reads as organised but not uniform; spacing also
@@ -49,7 +50,7 @@ const FLARE_LIFE = 1.4; // s
 const VERT = `
 attribute float aRow, aIdx;
 uniform vec2 uRes;                       // canvas size, CSS px
-uniform float uTime, uWave, uPulse, uAmp, uBreath, uDpr;
+uniform float uTime, uWave, uPulse, uAmp, uBreath, uDpr, uTilt;
 uniform float uY[${ROWS}], uSpace[${ROWS}], uShift[${ROWS}], uCurve[${ROWS}], uLen[${ROWS}], uPh[${ROWS}], uSize[${ROWS}];
 uniform vec4 uFlare[${MAX_FLARES}];      // x, y (CSS px), start time, strength
 varying float vA; varying float vFlare;
@@ -57,11 +58,14 @@ void main() {
   int r = int(aRow + 0.5);
   float ph = uPh[r];
   // spacing: the row's own, breathing slowly
-  float sp = uSpace[r] * (1.0 + uBreath * sin(uTime * (0.21 + 0.05 * ph) + ph * 3.0));
-  float period = uRes.x + 160.0;
+  float sp = uSpace[r] * (1.0 + uBreath * sin(uTime * (0.08 + 0.02 * ph) + ph * 3.0));
+  // rows are laid out on a plane tilted away from the player: wider than the screen, since the far (upper)
+  // part of the plane is drawn in towards the middle
+  float span = uRes.x * (1.0 + uTilt);
+  float period = span + 160.0;
   float u0 = aIdx * sp;
   if (u0 > period) { gl_PointSize = 0.0; gl_Position = vec4(2.0, 2.0, 0.0, 1.0); vA = 0.0; vFlare = 0.0; return; }
-  float u = mod(u0 + uShift[r], period) - 80.0;
+  float u = mod(u0 + uShift[r], period) - 80.0 - uRes.x * uTilt * 0.5;
   // spacing also varies along the row (monotonic warp), drifting as the dots travel
   float x = u + 34.0 * sin(u * 0.0045 + uWave * 0.6 + ph * 5.0);
   // the curve: two waves, deeper with the music
@@ -69,7 +73,14 @@ void main() {
   float y = uY[r] * uRes.y
           + uCurve[r] * uAmp * (sin(x * k + uWave + ph * 7.0) + 0.45 * sin(x * k * 2.3 - uWave * 0.7 + ph * 11.0));
   // a soft swell of light travelling along each row
-  float swell = 0.5 + 0.5 * sin(x * 0.006 - uWave * 1.7 + ph * 4.0);
+  float swell = 0.5 + 0.5 * sin(x * 0.005 - uWave * 1.4 + ph * 4.0);
+  // perspective: depth grows towards the top; far rows are drawn smaller, fainter, closer together and in
+  // towards the middle (y on the plane is foreshortened)
+  float yN = clamp(y / uRes.y, -0.2, 1.2);
+  float yS = pow(max(yN, 0.0), 1.0 + 0.45 * uTilt) * uRes.y;
+  float z = 1.0 + uTilt * (1.0 - yS / uRes.y);
+  x = uRes.x * 0.5 + (x - uRes.x * 0.5) / z;
+  y = yS;
   float flare = 0.0;
   for (int i = 0; i < ${MAX_FLARES}; i++) {
     vec4 f = uFlare[i];
@@ -78,8 +89,8 @@ void main() {
     float d = distance(vec2(x, y), f.xy);
     flare += exp(-d * d / (2.0 * 90.0 * 90.0)) * f.w * (1.0 - age / ${FLARE_LIFE.toFixed(1)});
   }
-  float size = uSize[r] * (1.0 + 0.45 * swell + 0.6 * uPulse + 0.8 * flare);
-  float a = (0.2 + 0.4 * swell + 0.3 * uPulse + 0.7 * flare) * (0.55 + 0.45 * uSize[r] / 3.0);
+  float size = uSize[r] * (1.0 + 0.35 * swell + 0.35 * uPulse + 0.7 * flare) / z;
+  float a = (0.2 + 0.34 * swell + 0.18 * uPulse + 0.6 * flare) * (0.6 + 0.4 * uSize[r] / 2.6) * mix(0.6, 1.0, 1.0 / z);
   // quieter behind the lyrics and below the horizon
   vec2 c = (vec2(x, y) / uRes - vec2(0.5, 0.47)) * vec2(1.0, 1.7);
   a *= mix(0.28, 1.0, smoothstep(0.1, 0.42, length(c)));
@@ -100,6 +111,32 @@ void main() {
   gl_FragColor = vec4(mix(uCol, uGlow, vFlare) * m, m); // premultiplied
 }`;
 
+// The sky behind the dots: the gradient plus three big soft glows drifting slowly about (the current
+// colour, one a step warmer, one a step cooler), drawn as one full-screen pass.
+const SKY_VERT = `
+attribute vec2 aQuad;
+varying vec2 vUv;
+void main() { vUv = vec2(aQuad.x * 0.5 + 0.5, 0.5 - aQuad.y * 0.5); gl_Position = vec4(aQuad, 0.0, 1.0); }`;
+const SKY_FRAG = `
+precision mediump float;
+varying vec2 vUv;
+uniform vec2 uRes;
+uniform vec3 uTop, uBot, uG1, uG2, uG3, uGA, uLine;
+uniform vec2 uP1, uP2, uP3;
+float glow(vec2 p, float r) { vec2 d = (vUv - p) * vec2(uRes.x / uRes.y, 1.0); return exp(-dot(d, d) / (r * r)); }
+void main() {
+  vec3 c = mix(uTop, uBot, smoothstep(0.0, 0.85, vUv.y));
+  c += uG1 * uGA.x * glow(uP1, 0.55) + uG2 * uGA.y * glow(uP2, 0.5) + uG3 * uGA.z * glow(uP3, 0.6);
+  vec2 m = (vUv - vec2(0.5, 0.47)) * vec2(1.0, 1.7);
+  c *= mix(0.72, 1.0, smoothstep(0.05, 0.45, length(m))); // darker behind the lyrics
+  // the horizon (like the landing page's floor line) and the ground below it
+  float px = 1.0 / uRes.y;
+  c = mix(c, vec3(0.03, 0.024, 0.085), smoothstep(0.9, 0.9 + 2.0 * px, vUv.y) * (0.6 + 0.35 * smoothstep(0.9, 1.0, vUv.y)));
+  c += uLine * 0.5 * exp(-pow((vUv.y - 0.9) / (1.2 * px), 2.0)) * (1.0 - 0.7 * pow(abs(vUv.x - 0.5) * 2.0, 2.0));
+  c += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0; // dither: no banding
+  gl_FragColor = vec4(c, 1.0);
+}`;
+
 function rng(seed: number) {
   return () => ((seed = (Math.imul(seed ^ (seed >>> 15), 0x2c1b3c6d) + 0x9e3779b9) >>> 0) / 2 ** 32);
 }
@@ -107,17 +144,17 @@ function rng(seed: number) {
 /** The rows: fixed per session (seeded), so the "choreography" is consistent. */
 function makeRows() {
   const r = rng(29);
-  const spacings = [11, 14, 17, 21, 26, 32, 40, 50];
+  const spacings = [18, 22, 28, 36, 46, 58];
   const rows = [];
   for (let i = 0; i < ROWS; i++) {
     rows.push({
       y: 0.05 + 0.82 * (i + 0.2 + 0.6 * r()) / ROWS,          // spread down the sky, a little irregular
       space: spacings[Math.floor(r() * spacings.length)],
-      speed: (14 + r() * 34) * (r() < 0.3 ? -1 : 1),         // px/s at rest; most flow one way, some the other
-      curve: 14 + r() * 46,                                  // px
+      speed: (5 + r() * 11) * (r() < 0.3 ? -1 : 1),          // px/s at rest; most flow one way, some the other
+      curve: 12 + r() * 30,                                  // px
       len: 520 + r() * 900,                                  // wavelength, px
       ph: r() * 10,
-      size: 1.4 + r() * 1.6,                                 // px
+      size: 1.5 + r() * 1.3,                                 // px
     });
   }
   return rows;
@@ -126,6 +163,9 @@ function makeRows() {
 export class Sky {
   private gl: WebGLRenderingContext | null;
   private prog: WebGLProgram | null = null;
+  private skyProg: WebGLProgram | null = null;
+  private skyBuf: WebGLBuffer | null = null;
+  private su: Record<string, WebGLUniformLocation | null> = {};
   private buf: WebGLBuffer | null = null;
   private count = 0;
   private u: Record<string, WebGLUniformLocation | null> = {};
@@ -160,21 +200,29 @@ export class Sky {
       if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh) ?? "shader");
       return sh;
     };
-    try {
+    const program = (vs: string, fs: string) => {
       const p = gl.createProgram()!;
-      gl.attachShader(p, shader(gl.VERTEX_SHADER, VERT));
-      gl.attachShader(p, shader(gl.FRAGMENT_SHADER, FRAG));
+      gl.attachShader(p, shader(gl.VERTEX_SHADER, vs));
+      gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fs));
       gl.linkProgram(p);
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p) ?? "link");
-      this.prog = p;
+      return p;
+    };
+    try {
+      this.prog = program(VERT, FRAG);
+      this.skyProg = program(SKY_VERT, SKY_FRAG);
     } catch (e) {
       console.warn("sky: WebGL unavailable, colours only", e);
       this.gl = null;
       return;
     }
-    for (const n of ["uRes", "uTime", "uWave", "uPulse", "uAmp", "uBreath", "uDpr", "uY", "uSpace", "uShift", "uCurve", "uLen", "uPh", "uSize", "uFlare", "uCol", "uGlow"]) {
+    for (const n of ["uRes", "uTime", "uWave", "uPulse", "uAmp", "uBreath", "uDpr", "uTilt", "uY", "uSpace", "uShift", "uCurve", "uLen", "uPh", "uSize", "uFlare", "uCol", "uGlow"]) {
       this.u[n] = gl.getUniformLocation(this.p, n === "uY" || n === "uSpace" || n === "uShift" || n === "uCurve" || n === "uLen" || n === "uPh" || n === "uSize" || n === "uFlare" ? n + "[0]" : n);
     }
+    for (const n of ["uRes", "uTop", "uBot", "uG1", "uG2", "uG3", "uGA", "uLine", "uP1", "uP2", "uP3"]) this.su[n] = gl.getUniformLocation(this.skyProg!, n);
+    this.skyBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.skyBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); // one big triangle
     // one vertex per dot: (row, index in row); positions are worked out in the shader
     const data = new Float32Array(ROWS * PER_ROW * 2);
     for (let r = 0, k = 0; r < ROWS; r++) for (let i = 0; i < PER_ROW; i++) { data[k++] = r; data[k++] = i; }
@@ -190,13 +238,12 @@ export class Sky {
     gl.uniform1fv(this.u.uLen, rows.map((r) => r.len));
     gl.uniform1fv(this.u.uPh, rows.map((r) => r.ph));
     gl.uniform1fv(this.u.uSize, rows.map((r) => r.size));
-    gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
   private get p(): WebGLProgram { return this.prog!; }
 
   private resize() {
-    this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.dpr = 1; // normal resolution: the sky is soft anyway, and on high-DPI screens this is a quarter of the pixels
     this.w = this.canvas.clientWidth; this.h = this.canvas.clientHeight;
     this.canvas.width = Math.round(this.w * this.dpr); this.canvas.height = Math.round(this.h * this.dpr);
     this.gl?.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -244,15 +291,15 @@ export class Sky {
     }
     // the performance: rows glide faster and curve deeper as the song gets louder and builds
     const motion = this.calm ? 0.15 : 1;
-    const pace = (0.45 + 1.7 * this.en + 0.8 * this.surge) * motion;
+    const pace = (0.5 + 0.9 * this.en + 0.4 * this.surge) * motion;
     this.rows.forEach((r, i) => { this.shift[i] += r.speed * pace * dt; });
-    this.wave += dt * (0.25 + 0.6 * this.en + 0.4 * this.surge) * motion;
-    const amp = 0.5 + 0.9 * this.int + 0.6 * this.surge;
-    const breath = 0.1 + 0.22 * this.int;
+    this.wave += dt * (0.1 + 0.22 * this.en + 0.15 * this.surge) * motion;
+    const amp = 0.6 + 0.7 * this.int + 0.35 * this.surge;
+    const breath = 0.08 + 0.14 * this.int;
     const pal = palette(this.col);
 
-    // sky colours: CSS on the play screen, a few times a second (they change slowly)
-    if (++this.cssAge >= 6) {
+    // without WebGL: sky colours as CSS on the play screen, a few times a second
+    if (!this.gl && ++this.cssAge >= 6) {
       this.cssAge = 0;
       const st = this.host.style;
       st.setProperty("--sky-top", css(pal.top));
@@ -262,9 +309,29 @@ export class Sky {
     }
 
     const gl = this.gl;
-    if (!gl || !this.prog) return;
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    if (!gl || !this.prog || !this.skyProg) return;
+    // ---- sky ----
+    gl.disable(gl.BLEND);
+    gl.useProgram(this.skyProg);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.skyBuf);
+    const aQuad = gl.getAttribLocation(this.skyProg, "aQuad");
+    gl.enableVertexAttribArray(aQuad); gl.vertexAttribPointer(aQuad, 2, gl.FLOAT, false, 0, 0);
+    const su = this.su, c3 = (n: string, c: readonly number[]) => gl.uniform3f(su[n], c[0] / 255, c[1] / 255, c[2] / 255);
+    gl.uniform2f(su.uRes, this.w, this.h);
+    c3("uTop", pal.top); c3("uBot", pal.bot);
+    c3("uLine", mixRGB(pal.neb, [255, 255, 255], 0.4));
+    c3("uG1", pal.neb);
+    c3("uG2", palette(Math.min(1, this.col + 0.45)).neb); // a step warmer
+    c3("uG3", mixRGB(palette(Math.max(0, this.col - 0.45)).neb, [70, 150, 235], 0.3)); // a step cooler
+    gl.uniform3f(su.uGA, 0.1 + 0.14 * this.int, 0.07 + 0.12 * this.int, 0.08 + 0.05 * (1 - this.int));
+    const k = this.clock;
+    gl.uniform2f(su.uP1, 0.24 + 0.12 * Math.sin(k * 0.031), 0.32 + 0.1 * Math.cos(k * 0.027));
+    gl.uniform2f(su.uP2, 0.78 + 0.1 * Math.cos(k * 0.023 + 1), 0.6 + 0.12 * Math.sin(k * 0.035 + 2));
+    gl.uniform2f(su.uP3, 0.55 + 0.25 * Math.sin(k * 0.017 + 4), 0.15 + 0.08 * Math.cos(k * 0.029 + 3));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.disableVertexAttribArray(aQuad);
+    // ---- dots ----
+    gl.enable(gl.BLEND);
     gl.useProgram(this.p);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     const aRow = gl.getAttribLocation(this.p, "aRow"), aIdx = gl.getAttribLocation(this.p, "aIdx");
@@ -278,6 +345,7 @@ export class Sky {
     gl.uniform1f(u.uAmp, amp);
     gl.uniform1f(u.uBreath, breath);
     gl.uniform1f(u.uDpr, this.dpr);
+    gl.uniform1f(u.uTilt, TILT);
     gl.uniform1fv(u.uShift, this.shift);
     gl.uniform4fv(u.uFlare, this.flares);
     gl.uniform3f(u.uCol, pal.dot[0] / 255, pal.dot[1] / 255, pal.dot[2] / 255);

@@ -14,7 +14,7 @@
   --miss: #ff7f9e;
   --early: rgba(204, 214, 255, 0.6);
   --fixed: #b9a6ff;
-  /* the sky: colours set by src/visuals.ts as the song builds (blue -> purple -> pink) */
+  /* the sky is drawn by src/visuals.ts (WebGL); this is the fallback without WebGL, coloured from there too */
   --sky-top: rgb(11, 18, 51);
   --sky-bot: rgb(22, 20, 71);
   --sky-glow: rgba(88, 112, 232, 0.1);
@@ -30,9 +30,8 @@
 /* the horizon, like the landing page's floor line, and the ground below it */
 .play::after {
   content: ""; position: absolute; z-index: -1; left: 0; right: 0; top: 90%; bottom: 0; pointer-events: none;
-  border-top: 1px solid var(--sky-line);
+  border-top: 1px solid rgba(190, 196, 245, 0.32);
   background: linear-gradient(180deg, rgba(8, 6, 24, 0.6), rgba(6, 5, 18, 0.92));
-  box-shadow: 0 -1px 14px var(--sky-glow);
 }
 
 .play > :not(.sky-canvas) { position: relative; } /* above the sky */
