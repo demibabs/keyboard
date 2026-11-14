@@ -1,5 +1,9 @@
 /* Song menu mockup B: shelves of album covers + a song drawer. */
 .landing.sm-page > .sky { position: fixed; } /* the page scrolls; the sky stays put */
+/* a quieter sky than the hero's, so small text reads easily: fainter stars and constellations, and the
+   gradient flattened towards the darker end */
+.landing.sm-page > .sky { opacity: 0.4; }
+.landing.sm-page { background: linear-gradient(180deg, #0a1030 0%, #0d1340 50%, #100f38 100%); }
 
 .sm-wrap { position: relative; z-index: 1; max-width: 1320px; margin: 0 auto; padding: 36px clamp(16px, 4vw, 56px) 96px; }
 
