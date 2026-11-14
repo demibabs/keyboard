@@ -2,6 +2,8 @@
 """Find album art for levels via the iTunes Search API and store its URL as "art" in chart.json
 (scripts/levels.ts copies it into level.json). Only a link is stored, nothing is downloaded.
 
+An empty "art" means none fits (e.g. the original isn't on iTunes); the song shows its video frame.
+
 usage: fetch_art.py [ids...] [--force] [--manifest songs.json]
   (all levels without art by default; ~20 lookups a minute). A manifest with "album"/"preferredAlbum"
   per level id makes it prefer that album over compilations and other editions."""
@@ -63,8 +65,8 @@ def main():
         if not os.path.exists(p):
             continue
         c = json.load(open(p))
-        if c.get("art") and not force:
-            continue
+        if "art" in c and not force:
+            continue  # has art, or "" = checked by hand, none that fits
         art = lookup(c["artist"], c["title"], albums.get(lid))
         if art:
             c["art"] = art
