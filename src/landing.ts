@@ -8,17 +8,24 @@ import { go, type Screen } from "./main";
 import { loadLevel, loadLyrics } from "./lyrics";
 import { selectScreen } from "./select";
 
-interface Featured { id: string; title: string; artist: string; album: string; art: string }
+interface Featured {
+  id: string; title: string; artist: string; album: string; art: string;
+  tint: string; // card colour, as "r, g, b"
+  tilt: number; // degrees
+  size: number; // scale of the card (width and text)
+  slips: number; // share of lines typed with a mistake or an autocorrection
+}
 const ART = "https://is1-ssl.mzstatic.com/image/thumb/";
 const FEATURED: Featured[] = [
   { id: "coldplay-yellow", title: "Yellow", artist: "Coldplay", album: "Parachutes",
-    art: ART + "Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/160x160bb.jpg" },
+    art: ART + "Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/160x160bb.jpg",
+    tint: "253, 200, 120", tilt: -3.5, size: 1.08, slips: 0.25 },
   { id: "oasis-wonderwall", title: "Wonderwall", artist: "Oasis", album: "(What's the Story) Morning Glory?",
-    art: ART + "Music113/v4/04/92/e0/0492e08b-cbcc-9969-9ad6-8f5a0888068c/5051961007107.jpg/160x160bb.jpg" },
-  { id: "adele-rolling-in-the-deep", title: "Rolling in the Deep", artist: "Adele", album: "21",
-    art: ART + "Music221/v4/eb/ca/25/ebca2596-cd1e-b295-91a3-771c868d0a79/191404113868.png/160x160bb.jpg" },
+    art: ART + "Music113/v4/04/92/e0/0492e08b-cbcc-9969-9ad6-8f5a0888068c/5051961007107.jpg/160x160bb.jpg",
+    tint: "120, 205, 255", tilt: 2.5, size: 0.9, slips: 0.6 },
   { id: "billie-eilish-birds-of-a-feather", title: "Birds of a Feather", artist: "Billie Eilish", album: "Hit Me Hard and Soft",
-    art: ART + "Music211/v4/92/9f/69/929f69f1-9977-3a44-d674-11f70c852d1b/24UMGIM36186.rgb.jpg/160x160bb.jpg" },
+    art: ART + "Music211/v4/92/9f/69/929f69f1-9977-3a44-d674-11f70c852d1b/24UMGIM36186.rgb.jpg/160x160bb.jpg",
+    tint: "214, 150, 255", tilt: 4, size: 1, slips: 0.6 },
 ];
 
 const SVG = "http://www.w3.org/2000/svg";
@@ -92,12 +99,10 @@ function sparkle(cls: string): SVGSVGElement {
 function card(f: Featured, alive: () => boolean): HTMLElement {
   const line = h("div", { class: "lc-line loading" }, h("span", { class: "lc-skeleton" }));
   const fill = h("div", { class: "lc-timer-fill" });
-  const tag = h("span", { class: "lc-tag" }, "Clean!");
-  const el = h("article", { class: "lyric-card" },
+  const el = h("article", { class: "lyric-card", "aria-label": `${f.title} by ${f.artist}` },
     h("img", { class: "lc-art", src: f.art, alt: `${f.album} cover`, width: 48, height: 48, loading: "lazy" }),
-    h("div", { class: "lc-head" }, h("span", { class: "lc-title" }, f.title), h("span", { class: "lc-artist" }, f.artist)),
     line,
-    h("div", { class: "lc-foot" }, h("div", { class: "lc-timer" }, fill), tag));
+    h("div", { class: "lc-foot" }, h("div", { class: "lc-timer" }, fill)));
 
   async function run(texts: string[]) {
     line.classList.remove("loading");
@@ -135,11 +140,23 @@ function card(f: Featured, alive: () => boolean): HTMLElement {
       await sleep(500);
       fill.style.transition = `transform ${total}ms linear`;
       fill.style.transform = "scaleX(0)";
+      // some lines get a slip, shown the way the game shows it: a wrong letter (red), or a skipped letter
+      // that the autocorrection caught, with the letters after it accepted as autocorrected (lavender)
+      const result = typeable.map(() => "ok");
+      const letters = typeable.map((ch, i) => (/[a-z0-9]/i.test(ch.c) ? i : -1)).filter((i) => i > 2);
+      if (letters.length > 8 && Math.random() < f.slips) {
+        const at = letters[Math.floor(Math.random() * (letters.length - 6))];
+        result[at] = "typo";
+        if (Math.random() < 0.5) for (let j = at + 1, n = 0; j < typeable.length && n < 4; j++, n++) {
+          if (typeable[j].c === " ") break;
+          result[j] = "fixed";
+        }
+      }
       for (let i = 0; i < typeable.length && alive(); i++) {
         typeable[i].span.classList.add("cursor");
         await sleep(delays[i]);
         typeable[i].span.classList.remove("cursor");
-        typeable[i].span.classList.add("ok");
+        typeable[i].span.classList.add(result[i]);
       }
       const left = getComputedStyle(fill).transform;
       fill.style.transition = "none";
@@ -156,8 +173,17 @@ function card(f: Featured, alive: () => boolean): HTMLElement {
 export function landingScreen(): Screen {
   let alive = true;
   const isAlive = () => alive;
-  const cards = FEATURED.map((f) => card(f, isAlive));
-  const word = h("span", { class: "wm-text" });
+  const cards = FEATURED.map((f) => {
+    const c = card(f, isAlive);
+    c.style.setProperty("--tint", f.tint);
+    c.style.setProperty("--tilt", `${f.tilt}deg`);
+    c.style.setProperty("--size", String(f.size));
+    return c;
+  });
+  // the wordmark is all there from the start, dim; it's "typed" by lighting up letter by letter
+  const name = "startype";
+  const letters = [...name].map((c) => h("span", { class: "wm-ch" }, c));
+  const word = h("span", { class: "wm-text" }, ...letters);
   const play = () => go(() => selectScreen());
 
   const el = h("div", { class: "landing" },
@@ -166,20 +192,29 @@ export function landingScreen(): Screen {
     h("section", { class: "hero" },
       h("div", { class: "hero-side left" }, cards[0], cards[1]),
       h("div", { class: "hero-center" },
-        h("h1", { class: "wordmark", "aria-label": "startype" }, word, h("span", { class: "wm-caret" }), sparkle("wm-star")),
+        h("h1", { class: "wordmark", "aria-label": name }, word, h("span", { class: "wm-caret" }), sparkle("wm-star")),
         h("p", { class: "tagline" }, "Type along to your favorite songs"),
         h("button", { class: "hero-play", onclick: play },
           h("span", { class: "hero-play-icon", "aria-hidden": "true" }), "Play"),
         h("p", { class: "hero-hint" }, "or press ", h("kbd", {}, "Enter"))),
-      h("div", { class: "hero-side right" }, cards[2], cards[3])),
+      h("div", { class: "hero-side right" }, cards[2])),
   );
 
-  // wordmark types itself in
-  const name = "startype";
-  if (reduceMotion()) word.textContent = name;
+  const wordmark = word.parentElement!;
+  if (reduceMotion()) { letters.forEach((l) => l.classList.add("lit")); wordmark.classList.add("typed"); }
   else (async () => {
-    await sleep(250);
-    for (let i = 1; i <= name.length && alive; i++) { word.textContent = name.slice(0, i); await sleep(85); }
+    // start once the font is in and the page is on screen, or it may finish before anyone sees it
+    await document.fonts.ready;
+    await new Promise(requestAnimationFrame);
+    await sleep(350);
+    for (const l of letters) {
+      if (!alive) return;
+      l.classList.add("cur");
+      await sleep(95);
+      l.classList.remove("cur");
+      l.classList.add("lit");
+    }
+    wordmark.classList.add("typed");
   })();
 
   // cards: fetch each song's lyrics, then loop its lines (staggered); drop a card if LRCLIB can't be reached
