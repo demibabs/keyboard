@@ -2,7 +2,9 @@
 """Find album art for levels via the iTunes Search API and store its URL as "art" in chart.json
 (scripts/levels.ts copies it into level.json). Only a link is stored, nothing is downloaded.
 
-usage: fetch_art.py [ids...] [--force]     (all levels without art by default; ~20 lookups a minute)"""
+usage: fetch_art.py [ids...] [--force] [--manifest songs.json]
+  (all levels without art by default; ~20 lookups a minute). A manifest with "album"/"preferredAlbum"
+  per level id makes it prefer that album over compilations and other editions."""
 import json, os, re, subprocess, sys, time, unicodedata, urllib.parse, urllib.request
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "levels")
@@ -15,7 +17,11 @@ def norm(s):
     return re.sub(r"[^a-z0-9]", "", s)
 
 
-def lookup(artist, title):
+COMPILATION = re.compile(r"greatest hits|best of|the hits|\bhits\b|essential|collection|anthology|now that|"
+                         r"karaoke|tribute|cover|instrumental|live|remix|8d|soundtrack|radio|deluxe edition of", re.I)
+
+
+def lookup(artist, title, album=None):
     q = urllib.parse.urlencode({"term": f"{artist} {title}", "entity": "song", "limit": 15, "country": "US"})
     req = urllib.request.Request("https://itunes.apple.com/search?" + q, headers={"User-Agent": UA})
     for tries in range(4):
@@ -31,17 +37,26 @@ def lookup(artist, title):
     def score(x):
         xa, xt, col = norm(x.get("artistName")), norm(x.get("trackName")), (x.get("collectionName") or "").lower()
         s = (3 if xt == t else 1 if t in xt or xt in t else 0) + (2 if a[:6] and (a[:6] in xa or xa[:6] in a) else 0)
-        s -= 1 if re.search(r"karaoke|tribute|cover|instrumental|live|remix|8d", col + " " + (x.get("trackName") or "").lower()) else 0
+        if album and norm(album)[:10] and (norm(album)[:10] in norm(col) or norm(col)[:10] in norm(album)):
+            s += 3  # the album the song is known from
+        elif COMPILATION.search(col + " " + (x.get("trackName") or "")):
+            s -= 2
         return s
     best = max(res, key=score, default=None)
-    if not best or score(best) < 4:
+    if not best or score(best) < 3:
         return None
     return best["artworkUrl100"].replace("100x100bb", "300x300bb")
 
 
 def main():
-    force = "--force" in sys.argv
-    ids = [a for a in sys.argv[1:] if not a.startswith("--")] or sorted(os.listdir(ROOT))
+    args = sys.argv[1:]
+    force = "--force" in args
+    albums = {}
+    if "--manifest" in args:
+        mpath = args[args.index("--manifest") + 1]
+        args.remove(mpath)
+        albums = {s["id"]: s.get("preferredAlbum") or s.get("album") for s in json.load(open(mpath)) if s.get("id")}
+    ids = [a for a in args if not a.startswith("--")] or sorted(os.listdir(ROOT))
     found = missing = 0
     for lid in ids:
         p = os.path.join(ROOT, lid, "chart.json")
@@ -50,7 +65,7 @@ def main():
         c = json.load(open(p))
         if c.get("art") and not force:
             continue
-        art = lookup(c["artist"], c["title"])
+        art = lookup(c["artist"], c["title"], albums.get(lid))
         if art:
             c["art"] = art
             json.dump(c, open(p, "w"), indent=1, ensure_ascii=False)

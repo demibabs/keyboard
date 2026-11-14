@@ -1,6 +1,11 @@
 import { audioCtx } from "./audio";
 import { landingScreen, notFoundScreen } from "./landing";
 import { selectScreen } from "./select";
+import { mocksScreen } from "./menu/mocks";
+import { mockAScreen } from "./menu/mock-a";
+import { mockBScreen } from "./menu/mock-b";
+import { mockCScreen } from "./menu/mock-c";
+import { mockDScreen } from "./menu/mock-d";
 
 export interface Screen {
   el: HTMLElement;
@@ -50,7 +55,11 @@ window.addEventListener("pointerdown", () => {
 
 // Pages are addressed by the hash (#/, #/play, ...), which works on any static host. The game's own screens
 // (play, results, editor, calibration) live under #/play without addresses of their own.
-const PAGES: Record<string, () => Screen | Promise<Screen>> = { "": landingScreen, play: selectScreen };
+const PAGES: Record<string, () => Screen | Promise<Screen>> = {
+  "": landingScreen, play: selectScreen,
+  // song menu mockups (temporary)
+  mocks: mocksScreen, "mocks/a": mockAScreen, "mocks/b": mockBScreen, "mocks/c": mockCScreen, "mocks/d": mockDScreen,
+};
 const page = () => location.hash.replace(/^#\/?/, "").replace(/\/$/, "");
 function route() { go(PAGES[page()] ?? notFoundScreen); }
 /** Go to a page (e.g. "play", "" for home), as a link would. */

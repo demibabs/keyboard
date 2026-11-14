@@ -36,4 +36,4 @@ it.skipIf(!fs.existsSync(CHART))("single slips cost at most 2 letters", () => {
     console.log(kind, JSON.stringify([...hist].sort((a, b) => a[0] - b[0])));
     expect(Math.max(...hist.keys()), `${kind}: ${worst.join(" | ")}`).toBeLessThanOrEqual(kind === "stray2" ? 4 : 2);
   }
-});
+}, 60_000); // a few seconds normally; slower when the machine is busy

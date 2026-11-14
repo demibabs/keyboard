@@ -34,10 +34,10 @@ const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matche
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- background: stars and faint constellations (seeded, so it's the same every visit) ----------
-function rng(seed: number) {
+export function rng(seed: number) {
   return () => ((seed = (Math.imul(seed ^ (seed >>> 15), 0x2c1b3c6d) + 0x9e3779b9) >>> 0) / 2 ** 32);
 }
-function sky(): SVGSVGElement {
+export function sky(): SVGSVGElement {
   const r = rng(7);
   const svg = document.createElementNS(SVG, "svg");
   svg.setAttribute("viewBox", "0 0 1600 1000");
@@ -118,7 +118,7 @@ function pattern(kind: Pattern, seed: number): SVGSVGElement {
   return svg;
 }
 
-function sparkle(cls: string): SVGSVGElement {
+export function sparkle(cls: string): SVGSVGElement {
   const svg = document.createElementNS(SVG, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("class", cls);
@@ -247,7 +247,7 @@ function navTile(): string {
   return (navPattern = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
 }
 
-function navbar(): HTMLElement {
+export function navbar(): HTMLElement {
   const nav = h("nav", { class: "navbar", "aria-label": "Main" },
     h("a", { class: "nav-home", href: "#/", "aria-label": "Home", title: "Home" }, sparkle("nav-star")),
     h("div", { class: "nav-links" },
