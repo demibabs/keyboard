@@ -178,9 +178,8 @@ export async function songMenuScreen(): Promise<Screen> {
     const q = query.trim();
     if (q || showAll) {
       const list = (q ? songs.filter((s) => matches(s, q)) : [...songs]).sort((a, b) => a.title.localeCompare(b.title));
-      const label = q ? `${list.length} ${list.length === 1 ? "match" : "matches"} for “${q}”` : `All ${list.length} songs, A–Z`;
       body.replaceChildren(
-        h("p", { class: "sm-results" }, label),
+        q ? h("p", { class: "sm-results" }, `${list.length} ${list.length === 1 ? "match" : "matches"} for “${q}”`) : "",
         list.length ? h("div", { class: "sm-grid" }, ...list.map(card))
           : h("p", { class: "sm-empty" }, "Nothing matches that. Try an artist, or part of a title."));
     } else {
