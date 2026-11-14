@@ -231,7 +231,7 @@ export function landingScreen(): Screen {
   });
   // the wordmark is all there from the start, dim; it's "typed" by lighting up letter by letter
   const name = "startype";
-  const letters = [...name].map((c) => h("span", { class: "wm-ch" }, c));
+  const letters = [...name].map((c, i) => h("span", { class: i < 4 ? "wm-ch star" : "wm-ch" }, c)); // "star" gets a warm tint
   const word = h("span", { class: "wm-text" }, ...letters);
   const play = () => go(() => selectScreen());
 
