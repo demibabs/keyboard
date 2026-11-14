@@ -2,6 +2,8 @@ import { audioUrl, type Chart } from "./chart";
 import { Engine, type EngineEvent } from "./engine";
 import { Player, loadBuffer, type GamePlayer } from "./audio";
 import { Cancelled, YouTubePlayer } from "./youtube";
+import { Sky, loadViz } from "./visuals";
+import "./play.css";
 import { h, fmtScore, pct } from "./dom";
 import { go, navigate, type Screen } from "./main";
 import { settings } from "./settings";
@@ -32,6 +34,7 @@ export function messageScreen(title: string, body: string): Screen {
 export async function playScreen(chart: Chart, speed: number, source: AudioSource): Promise<Screen> {
   const engine = new Engine(chart, speed);
   const lines = engine.lines;
+  const viz = await loadViz(chart.id); // music features for the sky (null: a calm default sky)
   // lead in only if the first line starts within LEAD_IN seconds
   const startFrom = Math.min(0, (lines.length ? engine.onset(0) : 0) - LEAD_IN);
   let player: GamePlayer;
@@ -70,7 +73,9 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
       h("h2", {}, "Paused"),
       h("p", {}, h("kbd", {}, "Esc"), " resume  ", h("kbd", {}, "R"), " restart  ", h("kbd", {}, "Q"), " quit")));
 
+  const skyCanvas = h("canvas", { class: "sky-canvas", "aria-hidden": "true" });
   const el = h("div", { class: "play" },
+    skyCanvas,
     h("header", { class: "hud" },
       h("div", { class: "hud-left" },
         h("div", { class: "hud-title" }, chart.title),
@@ -160,6 +165,10 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
         const r = ev.result;
         const label = `${r.clean ? "Clean! " : ""}+${Math.round(r.bonus)}${r.speed >= 0.5 ? " fast" : ""}`;
         popup(ev.line, label, r.clean ? "j-clean" : "j-done", lines[ev.line].end - 1);
+        if (r.clean) { // sparkles from the end of a clean line
+          const at = views.get(ev.line)?.chars.get(lines[ev.line].end - 1)?.getBoundingClientRect();
+          if (at) sky?.burst(at.right, at.top + at.height / 2);
+        }
         break;
       }
       case "resync":
@@ -180,9 +189,16 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
   let lastPos = -1;
   const lastDeadline = lines.length ? engine.deadline(lines.length - 1) : 0;
 
+  let sky: Sky | null = null;
+  let lastFrame = performance.now();
   function frame() {
     raf = requestAnimationFrame(frame);
+    const nowMs = performance.now();
+    const dt = (nowMs - lastFrame) / 1000;
+    lastFrame = nowMs;
     if (paused) return;
+    // the sky follows the song: player time is real seconds at this speed; the music data is at 1x
+    sky?.frame(player.time() * speed, dt);
     const jt = judgeNow();
     const vt = visNow();
     engine.update(jt);
@@ -291,6 +307,10 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
 
   player.play(startFrom, 0.2);
   raf = requestAnimationFrame(frame);
+  requestAnimationFrame(() => { // once the canvas is laid out
+    sky = new Sky(skyCanvas, viz);
+    if (import.meta.env.DEV) (window as any).__sky = sky;
+  });
   if (import.meta.env.DEV) (window as any).__play = { engine, player, aOff: 0, skip };
 
   return {
@@ -321,6 +341,7 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
       } else if (k.length === 1) e.preventDefault(); // punctuation isn't typed; swallow quick-find keys
     },
     destroy() {
+      sky?.dispose();
       cancelAnimationFrame(raf);
       window.removeEventListener("blur", onBlur);
       player.onEnded = null;

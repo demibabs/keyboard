@@ -37,7 +37,7 @@ function chartSaver(): Plugin {
   };
 }
 
-// The release build ships only level.json files + index.json (no public dir copy): local audio, full-text
+// The release build ships only level.json (+ viz.json) files + index.json (no public dir copy): local audio, full-text
 // charts and local.json stay out.
 function releaseLevels(): Plugin {
   return {
@@ -48,7 +48,10 @@ function releaseLevels(): Plugin {
       const emit = (rel: string) =>
         this.emitFile({ type: "asset", fileName: `levels/${rel}`, source: fs.readFileSync(path.join(root, rel)) });
       emit("index.json");
-      for (const id of JSON.parse(fs.readFileSync(path.join(root, "index.json"), "utf8")).levels) emit(`${id}/level.json`);
+      for (const id of JSON.parse(fs.readFileSync(path.join(root, "index.json"), "utf8")).levels) {
+        emit(`${id}/level.json`);
+        if (fs.existsSync(path.join(root, id, "viz.json"))) emit(`${id}/viz.json`); // music features for the sky
+      }
     },
   };
 }
