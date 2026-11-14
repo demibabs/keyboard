@@ -36,7 +36,7 @@
   opacity: 0.72;
 }
 .horizon::after { /* the ground below the horizon */
-  content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 30vh;
+  content: ""; position: absolute; left: 0; right: 0; top: 2px; height: calc(11vh - 2px); /* down to the bottom edge, not past it (no scrolling) */
   background: linear-gradient(180deg, rgba(11, 8, 28, 0.7), var(--ground) 40%);
 }
 
@@ -90,7 +90,7 @@
   padding: 32px clamp(16px, 4vw, 56px) 15vh;
 }
 .hero-center { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.hero-side { display: flex; flex-direction: column; gap: 84px; }
+.hero-side { display: flex; flex-direction: column; gap: 104px; }
 .hero-side.left { align-items: flex-end; }
 .hero-side.right { align-items: flex-start; }
 /* the outer edges mirror each other: the left column's outer edge is the wider of Yellow and the offset
@@ -148,11 +148,11 @@
 }
 @keyframes glint { 0%, 100% { transform: scale(0.75) rotate(0deg); opacity: 0.7; } 50% { transform: scale(1) rotate(45deg); opacity: 1; } }
 
-.tagline { margin: 22px 0 0; font-size: clamp(18px, 2vw, 22px); font-weight: 400; color: var(--pale); opacity: 0.85; letter-spacing: 0.01em; }
+.tagline { margin: 28px 0 0; font-size: clamp(18px, 2vw, 22px); font-weight: 400; color: var(--pale); opacity: 0.85; letter-spacing: 0.01em; }
 
 /* ---------- play ---------- */
 .hero-play {
-  margin-top: 44px;
+  margin-top: 54px;
   display: inline-flex; align-items: center; gap: 16px;
   padding: 20px 52px 20px 42px;
   font-size: 26px; font-weight: 700; letter-spacing: 0.01em;
