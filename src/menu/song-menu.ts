@@ -179,7 +179,8 @@ export async function songMenuScreen(): Promise<Screen> {
     if (q || showAll) {
       const list = (q ? songs.filter((s) => matches(s, q)) : [...songs]).sort((a, b) => a.title.localeCompare(b.title));
       body.replaceChildren(
-        q ? h("p", { class: "sm-results" }, `${list.length} ${list.length === 1 ? "match" : "matches"} for “${q}”`) : "",
+        q ? h("p", { class: "sm-results" }, `${list.length} ${list.length === 1 ? "match" : "matches"} for “${q}”`)
+          : h("p", { class: "sm-results", "aria-hidden": "true" }, "\u00a0"), // same gap above the all-songs grid, no text
         list.length ? h("div", { class: "sm-grid" }, ...list.map(card))
           : h("p", { class: "sm-empty" }, "Nothing matches that. Try an artist, or part of a title."));
     } else {
