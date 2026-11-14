@@ -70,8 +70,8 @@
 }
 .wm-ch { position: relative; color: rgba(204, 214, 255, 0.2); transition: color 0.18s ease, text-shadow 0.3s ease; }
 .wm-ch.lit { color: #f4f6ff; text-shadow: 0 0 32px rgba(162, 139, 227, 0.28); }
-.wm-ch.star { color: rgba(253, 227, 145, 0.16); }
-.wm-ch.star.lit { color: #fff0c2; text-shadow: 0 0 32px rgba(253, 227, 145, 0.22); }
+.wm-ch.star { color: rgba(222, 220, 220, 0.19); }
+.wm-ch.star.lit { color: #fbf6e6; text-shadow: 0 0 32px rgba(214, 180, 190, 0.26); }
 .wm-ch.cur::after { /* the cursor while the wordmark is being typed */
   content: ""; position: absolute; left: 0.04em; right: 0.04em; bottom: -0.06em; height: 0.05em; border-radius: 1em;
   background: var(--gold); box-shadow: 0 0 10px rgba(253, 227, 145, 0.5);
