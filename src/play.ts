@@ -308,7 +308,7 @@ export async function playScreen(chart: Chart, speed: number, source: AudioSourc
   player.play(startFrom, 0.2);
   raf = requestAnimationFrame(frame);
   requestAnimationFrame(() => { // once the canvas is laid out
-    sky = new Sky(skyCanvas, viz);
+    sky = new Sky(skyCanvas, el, viz);
     if (import.meta.env.DEV) (window as any).__sky = sky;
   });
   if (import.meta.env.DEV) (window as any).__play = { engine, player, aOff: 0, skip };

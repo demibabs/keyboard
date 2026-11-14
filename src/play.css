@@ -14,28 +14,45 @@
   --miss: #ff7f9e;
   --early: rgba(204, 214, 255, 0.6);
   --fixed: #b9a6ff;
-  background: #0b1233;
+  /* the sky: colours set by src/visuals.ts as the song builds (blue -> purple -> pink) */
+  --sky-top: rgb(11, 18, 51);
+  --sky-bot: rgb(22, 20, 71);
+  --sky-glow: rgba(88, 112, 232, 0.1);
+  --sky-line: rgba(180, 190, 245, 0.55);
+  background:
+    radial-gradient(70% 55% at 22% 30%, var(--sky-glow), transparent 70%),
+    radial-gradient(60% 50% at 80% 62%, var(--sky-glow), transparent 70%),
+    linear-gradient(180deg, var(--sky-top), var(--sky-bot) 78%, #0b0920);
   overflow: hidden;
+  isolation: isolate; /* so the ground (z-index -1) sits above the background but below everything else */
 }
-.play > .sky-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.play > .sky-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+/* the horizon, like the landing page's floor line, and the ground below it */
+.play::after {
+  content: ""; position: absolute; z-index: -1; left: 0; right: 0; top: 90%; bottom: 0; pointer-events: none;
+  border-top: 1px solid var(--sky-line);
+  background: linear-gradient(180deg, rgba(8, 6, 24, 0.6), rgba(6, 5, 18, 0.92));
+  box-shadow: 0 -1px 14px var(--sky-glow);
+}
+
 .play > :not(.sky-canvas) { position: relative; } /* above the sky */
 .play > .overlay { position: absolute; }
 
 .play .hud-title { color: var(--text); }
 .play .hud-lines b { color: var(--perfect); }
 
-/* lyrics: a soft shadow keeps them crisp over the moving sky */
-.play .slot.cur { text-shadow: 0 2px 18px rgba(5, 7, 28, 0.7); }
+/* lyrics: the sky dims itself behind them (no text-shadow: re-blurred on every cursor blink, it was costly) */
 .play .slot.prev { opacity: 0.5; }
 .play .ch.open { background: rgba(253, 227, 145, 0.14); box-shadow: 0 0 0 3px rgba(253, 227, 145, 0.14); }
 .play .ch.cursor::before { box-shadow: 0 0 8px rgba(253, 227, 145, 0.6); }
 
 /* the next line: a glass card, like the landing page's lyric cards */
+/* (no backdrop blur: over the moving sky it had to be redone every frame) */
 .play .slot.next {
-  background: rgba(14, 20, 60, 0.5); border-color: rgba(204, 214, 255, 0.14);
-  backdrop-filter: blur(8px); box-shadow: 0 16px 40px rgba(3, 4, 20, 0.35);
+  background: rgba(12, 17, 52, 0.78); border-color: rgba(204, 214, 255, 0.14);
+  box-shadow: 0 16px 40px rgba(3, 4, 20, 0.35);
 }
-.play .slot.next.soon { border-color: rgba(204, 214, 255, 0.42); background: rgba(30, 38, 96, 0.5); }
+.play .slot.next.soon { border-color: rgba(204, 214, 255, 0.42); background: rgba(24, 31, 84, 0.8); }
 
 .play .line-timer { background: rgba(204, 214, 255, 0.12); }
 .play .line-timer-fill { background: linear-gradient(90deg, #a28be3, #ccd6ff); }
