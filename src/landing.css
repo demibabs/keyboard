@@ -178,3 +178,14 @@
 @media (prefers-reduced-motion: reduce) {
   .sky .twinkle, .wm-star, .lyric-card, .wm-caret { animation: none; }
 }
+
+/* card patterns (tiles after the blocks in the reference level), faint and fading out behind the text */
+.lc-pattern {
+  position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(105deg, rgba(0, 0, 0, 0.35) 15%, #000 85%);
+  mask-image: linear-gradient(105deg, rgba(0, 0, 0, 0.35) 15%, #000 85%);
+}
+.lc-pattern-svg { position: absolute; top: 0; left: 0; }
+.lc-pattern-svg .lt { fill: rgb(var(--tint)); }
+.lc-pattern-svg .dk { fill: #04061a; }
+.lyric-card > .lc-line, .lyric-card > .lc-foot { position: relative; }

@@ -11,21 +11,22 @@ interface Featured {
   tilt: number; // degrees
   size: number; // scale of the card (width and text)
   slips: number; // share of lines typed with a mistake or an autocorrection
+  pattern: Pattern; // faint tiled background, after the blocks in the reference level
   lines: string[]; // short excerpt: the hook and the line after it
 }
 const ART = "https://is1-ssl.mzstatic.com/image/thumb/";
 const FEATURED: Featured[] = [
   { id: "coldplay-yellow", title: "Yellow", artist: "Coldplay", album: "Parachutes",
     art: ART + "Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/160x160bb.jpg",
-    tint: "253, 200, 120", tilt: -3.5, size: 1.08, slips: 0.25,
+    tint: "253, 200, 120", tilt: -3.5, size: 1.08, slips: 0.25, pattern: "facets",
     lines: ["Look how they shine for you", "And everything you do"] },
   { id: "oasis-wonderwall", title: "Wonderwall", artist: "Oasis", album: "(What's the Story) Morning Glory?",
     art: ART + "Music113/v4/04/92/e0/0492e08b-cbcc-9969-9ad6-8f5a0888068c/5051961007107.jpg/160x160bb.jpg",
-    tint: "120, 205, 255", tilt: 2.5, size: 0.9, slips: 0.6,
+    tint: "120, 205, 255", tilt: 2.5, size: 0.9, slips: 0.6, pattern: "arcs",
     lines: ["You're gonna be the one that saves me", "And after all"] },
   { id: "billie-eilish-birds-of-a-feather", title: "Birds of a Feather", artist: "Billie Eilish", album: "Hit Me Hard and Soft",
     art: ART + "Music211/v4/92/9f/69/929f69f1-9977-3a44-d674-11f70c852d1b/24UMGIM36186.rgb.jpg/160x160bb.jpg",
-    tint: "214, 150, 255", tilt: 4, size: 1, slips: 0.6,
+    tint: "214, 150, 255", tilt: 4, size: 1, slips: 0.6, pattern: "patchwork",
     lines: ["I said I'd never think I wasn't better alone", "Can't change the weather, might not be forever"] },
 ];
 
@@ -72,6 +73,52 @@ function sky(): SVGSVGElement {
   return svg;
 }
 
+// ---------- card patterns: a grid of tiles in faint shades of the card's tint ----------
+type Pattern = "facets" | "arcs" | "patchwork";
+const TILE = 26;
+function pattern(kind: Pattern, seed: number): SVGSVGElement {
+  const r = rng(seed);
+  const W = 420, H = 260; // bigger than any card; the card clips it
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("width", String(W));
+  svg.setAttribute("height", String(H));
+  svg.setAttribute("class", "lc-pattern-svg");
+  svg.setAttribute("aria-hidden", "true");
+  const shape = (d: string, dark = r() < 0.35) => {
+    const p = document.createElementNS(SVG, "path");
+    p.setAttribute("d", d);
+    p.setAttribute("class", dark ? "dk" : "lt");
+    p.setAttribute("fill-opacity", (dark ? 0.12 + r() * 0.18 : 0.03 + r() * 0.08).toFixed(3));
+    svg.append(p);
+  };
+  for (let y = 0; y < H; y += TILE) for (let x = 0; x < W; x += TILE) {
+    const s = TILE, X = x + s, Y = y + s, cx = x + s / 2, cy = y + s / 2;
+    if (r() < 0.12) continue; // leave some tiles plain
+    if (kind === "facets") {
+      // square split on a diagonal into two shades (the faceted blocks)
+      if (r() < 0.5) { shape(`M${x} ${y}H${X}L${x} ${Y}Z`); shape(`M${X} ${y}V${Y}H${x}Z`); }
+      else { shape(`M${x} ${y}H${X}V${Y}Z`); shape(`M${x} ${y}V${Y}H${X}Z`); }
+    } else if (kind === "arcs") {
+      // quarter circles from a corner, sometimes a half circle on an edge (the rounded ground tiles)
+      const k = Math.floor(r() * 6);
+      if (k < 4) {
+        const [ax, ay] = [[x, y], [X, y], [X, Y], [x, Y]][k];
+        const [bx, by] = [[X, y], [X, Y], [x, Y], [x, y]][k];
+        const [ex, ey] = [[x, Y], [x, y], [X, y], [X, Y]][k];
+        shape(`M${ax} ${ay}L${bx} ${by}A${s} ${s} 0 0 1 ${ex} ${ey}Z`);
+      } else if (k === 4) shape(`M${x} ${Y}A${s / 2} ${s / 2} 0 0 1 ${X} ${Y}Z`);
+      else shape(`M${x} ${y}H${X}V${Y}H${x}Z`);
+    } else {
+      // patchwork: hourglass / pinwheel triangles and small inset squares
+      const k = Math.floor(r() * 3);
+      if (k === 0) { shape(`M${x} ${y}H${X}L${cx} ${cy}Z`); shape(`M${x} ${Y}H${X}L${cx} ${cy}Z`); }
+      else if (k === 1) { shape(`M${x} ${y}L${cx} ${cy}L${x} ${Y}Z`); shape(`M${X} ${y}L${cx} ${cy}L${X} ${Y}Z`, false); }
+      else { const q = s / 4; shape(`M${x} ${y}H${X}V${Y}H${x}Z`); shape(`M${x + q} ${y + q}H${X - q}V${Y - q}H${x + q}Z`, r() < 0.5); }
+    }
+  }
+  return svg;
+}
+
 function sparkle(cls: string): SVGSVGElement {
   const svg = document.createElementNS(SVG, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
@@ -88,6 +135,7 @@ function card(f: Featured, alive: () => boolean): HTMLElement {
   const line = h("div", { class: "lc-line" });
   const fill = h("div", { class: "lc-timer-fill" });
   const el = h("article", { class: "lyric-card", "aria-label": `${f.title} by ${f.artist}` },
+    h("div", { class: "lc-pattern" }, pattern(f.pattern, f.id.length * 97 + f.tilt * 13)),
     h("img", { class: "lc-art", src: f.art, alt: `${f.album} cover`, width: 48, height: 48, loading: "lazy" }),
     line,
     h("div", { class: "lc-foot" }, h("div", { class: "lc-timer" }, fill)));
