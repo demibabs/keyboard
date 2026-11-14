@@ -231,7 +231,7 @@ function navTile(): string {
       const up = (Math.round((x + T / 2) / (T / 2)) + row) % 2 === 0;
       const d = up ? `M${x} ${Y}L${x + T / 2} ${y}L${x + T} ${Y}Z` : `M${x} ${y}L${x + T} ${y}L${x + T / 2} ${Y}Z`;
       const light = r() < 0.5;
-      const o = light ? 0.015 + r() * 0.035 : 0.06 + r() * 0.14;
+      const o = light ? 0.008 + r() * 0.02 : 0.05 + r() * 0.1;
       paths += `<path d='${d}' fill='${light ? "#ccd6ff" : "#03051a"}' fill-opacity='${o.toFixed(3)}'/>`;
     }
   }
@@ -241,8 +241,8 @@ function navTile(): string {
 
 function navbar(): HTMLElement {
   const nav = h("nav", { class: "navbar", "aria-label": "Main" },
+    h("a", { class: "nav-home", href: "#/", "aria-label": "Home", title: "Home" }, sparkle("nav-star")),
     h("div", { class: "nav-links" },
-      h("a", { class: "nav-home", href: "#/", "aria-label": "Home", title: "Home" }, sparkle("nav-star")),
       h("a", { class: "nav-link", href: "#/play" }, "Play"),
       h("a", { class: "nav-link", href: "#/about" }, "About")));
   nav.style.setProperty("--nav-pattern", navTile());

@@ -42,34 +42,34 @@
 
 /* ---------- navbar ---------- */
 .navbar {
-  --nav-h: 60px;
+  --nav-h: 72px;
   position: sticky; top: 0; z-index: 10;
   height: var(--nav-h);
-  display: flex; align-items: center; justify-content: flex-end;
+  display: flex; align-items: center; justify-content: space-between;
   padding: 0 clamp(16px, 4vw, 56px);
-  background: var(--nav-pattern), linear-gradient(180deg, rgba(10, 15, 44, 0.92), rgba(13, 18, 54, 0.88));
+  background: var(--nav-pattern), linear-gradient(180deg, rgba(5, 8, 26, 0.96), rgba(7, 10, 32, 0.94));
   backdrop-filter: blur(8px);
 }
 .navbar::after { /* the floor line, like the level's glowing ground edge */
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
-  background: linear-gradient(90deg, rgba(162, 139, 227, 0.15), rgba(162, 139, 227, 0.7) 50%, rgba(162, 139, 227, 0.15));
+  background: linear-gradient(90deg, rgba(162, 139, 227, 0.12), rgba(162, 139, 227, 0.55) 50%, rgba(162, 139, 227, 0.12));
   box-shadow: 0 0 10px rgba(162, 139, 227, 0.35);
 }
-.nav-links { display: flex; align-items: center; gap: clamp(18px, 2.5vw, 32px); }
+.nav-links { display: flex; align-items: center; gap: clamp(22px, 3vw, 40px); }
 .nav-link {
-  color: var(--pale); opacity: 0.78; text-decoration: none; font-size: 16px; font-weight: 500; letter-spacing: 0.01em;
+  color: var(--pale); opacity: 0.78; text-decoration: none; font-size: 19px; font-weight: 500; letter-spacing: 0.01em;
   padding: 6px 2px; border-bottom: 2px solid transparent; transition: opacity 0.15s, border-color 0.15s;
 }
 .nav-link:hover { opacity: 1; border-bottom-color: rgba(204, 214, 255, 0.5); }
-.nav-home { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; transition: background 0.15s; }
+.nav-home { margin-left: -8px; /* the star's ink lines up with the page margin */ display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; transition: background 0.15s; }
 .nav-home:hover { background: rgba(253, 227, 145, 0.08); }
-.nav-star { width: 20px; height: 20px; fill: var(--gold); filter: drop-shadow(0 0 5px rgba(253, 227, 145, 0.45)); transition: transform 0.25s ease; }
+.nav-star { width: 27px; height: 27px; fill: var(--gold); filter: drop-shadow(0 0 5px rgba(253, 227, 145, 0.45)); transition: transform 0.25s ease; }
 .nav-home:hover .nav-star { transform: rotate(45deg) scale(1.08); }
 .nav-link:focus-visible, .nav-home:focus-visible, .nf-home:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
 
 /* ---------- 404 ---------- */
 .not-found {
-  position: relative; z-index: 1; min-height: calc(100% - 60px);
+  position: relative; z-index: 1; min-height: calc(100% - 72px);
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 16px 15vh;
 }
 .nf-code { margin: 0; font-size: clamp(88px, 14vw, 168px); font-weight: 700; letter-spacing: -0.04em; line-height: 1; color: #f4f6ff; text-shadow: 0 0 32px rgba(162, 139, 227, 0.28); }
@@ -82,7 +82,7 @@
 /* ---------- layout ---------- */
 .hero {
   position: relative; z-index: 1;
-  min-height: calc(100% - 60px);
+  min-height: calc(100% - 72px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
