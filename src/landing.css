@@ -75,7 +75,7 @@
 /* dim letters are solid colours (what the translucent tint looks like on the sky), since the tight
    letter-spacing makes neighbours overlap and translucent overlaps show as darker seams */
 .wm-ch { position: relative; color: #363d6e; transition: color 0.18s ease, text-shadow 0.3s ease; }
-.wm-ch.lit { z-index: 1; /* a lit letter sits over the dim one after it (they overlap slightly) */ color: #f4f6ff; text-shadow: 0 0 32px rgba(162, 139, 227, 0.28); }
+.wm-ch.lit { color: #f4f6ff; text-shadow: 0 0 32px rgba(162, 139, 227, 0.28); }
 .wm-ch.star { color: #383b5d; }
 .wm-ch.star.lit { color: #fdf3d6; text-shadow: 0 0 32px rgba(238, 206, 160, 0.24); }
 .wm-ch.cur::after { /* the cursor while the wordmark is being typed */
