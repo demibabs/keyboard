@@ -167,22 +167,23 @@ export async function songMenuScreen(): Promise<Screen> {
           h("span", { class: `sm-detail-tier ${d.cls}` }, d.tier),
           h("h2", { class: "sm-detail-title" }, s.title),
           h("p", { class: "sm-detail-artist" }, s.artist))),
-      h("div", { class: "sm-speeds", role: "group", "aria-label": "Speed" }, ...SPEEDS.map((v) =>
-        h("button", { class: `sm-speed${v === sp ? " on" : ""}`, "aria-pressed": String(v === sp), onclick: () => setSpeed(v) }, `${v}×`))),
-      h("div", { class: "sm-fill" }), // spare height is shared out evenly above and below the stats
-      h("div", { class: "sm-stats" },
-        stat("Needs", h("span", { class: d.cls }, `${d.needs} wpm`)),
-        stat("Length", lengthAt(s, sp)),
-        stat("Best", best ? `${best.grade} · ${pct(best.accuracy, 0)}` : "–", best ? `Best score ${fmtScore(best.score)}` : undefined)),
-      h("div", { class: "sm-fill" }),
-      h("button", { class: "sm-play", disabled: !src, onclick: () => startSong(s, sp) },
-        h("span", { class: "sm-play-icon", "aria-hidden": "true" }), "Play"),
-      h("p", { class: "sm-detail-foot" },
+      // speed and the stats it changes
+      h("div", { class: "sm-settings" },
+        h("div", { class: "sm-speeds", role: "group", "aria-label": "Speed" }, ...SPEEDS.map((v) =>
+          h("button", { class: `sm-speed${v === sp ? " on" : ""}`, "aria-pressed": String(v === sp), onclick: () => setSpeed(v) }, `${v}×`))),
+        h("div", { class: "sm-stats" },
+          stat("Needs", h("span", { class: d.cls }, `${d.needs} wpm`)),
+          stat("Length", lengthAt(s, sp)),
+          stat("Best", best ? `${best.grade} · ${pct(best.accuracy, 0)}` : "–", best ? `Best score ${fmtScore(best.score)}` : undefined))),
+      h("div", { class: "sm-action" },
+        h("button", { class: "sm-play", disabled: !src, onclick: () => startSong(s, sp) },
+          h("span", { class: "sm-play-icon", "aria-hidden": "true" }), "Play"),
+        h("p", { class: "sm-detail-foot" },
         s.local && s.youtube
           ? h("button", { class: "sm-source", onclick: () => toggleSource(), title: "Switch audio source (A)" },
             src === "local" ? "Plays from local audio" : "Plays from YouTube")
           : src === "youtube" ? "Plays from YouTube" : src === "local" ? "Plays from local audio" : "No audio available",
-        h("span", {}, h("kbd", {}, "Enter"), " play  ", h("kbd", {}, "← →"), " speed", ...(s.local ? ["  ", h("kbd", {}, "E"), " edit timing"] : []))),
+          h("span", {}, h("kbd", {}, "Enter"), " play  ", h("kbd", {}, "← →"), " speed", ...(s.local ? ["  ", h("kbd", {}, "E"), " edit timing"] : [])))),
     );
   }
 
@@ -203,7 +204,7 @@ export async function songMenuScreen(): Promise<Screen> {
   const el = h("div", { class: "landing sm-page" },
     sky(),
     navbar(),
-    h("main", { class: "ma" },
+    h("main", { class: "sm-main" },
       h("section", { class: "sm-browse" },
         h("div", { class: "sm-tools" },
           h("label", { class: "sm-search" }, h("span", { class: "sm-search-icon", "aria-hidden": "true" }), search, h("kbd", { class: "sm-slash" }, "/")),
