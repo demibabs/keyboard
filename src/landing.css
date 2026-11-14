@@ -77,7 +77,16 @@
 .wm-ch { position: relative; color: #363d6e; transition: color 0.18s ease, text-shadow 0.3s ease; }
 .wm-ch.lit { color: #f4f6ff; text-shadow: 0 0 32px rgba(162, 139, 227, 0.28); }
 .wm-ch.star { color: #383b5d; }
-.wm-ch.star.lit { color: #fdf3d6; text-shadow: 0 0 32px rgba(238, 206, 160, 0.24); }
+/* lit "star" is filled with a fine pattern (sparkles over facets) instead of a flat colour; the text is
+   transparent and the pattern is clipped to the letters, aligned across them by --bx (set from script).
+   text-shadow would paint over a text-clipped background, so the glow is a drop-shadow filter */
+.wm-ch.star.lit {
+  color: transparent;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0H40L0 40Z' fill='%23efdcae' fill-opacity='.28'/%3E%3Cpath d='M28 5Q28 12 35 12Q28 12 28 19Q28 12 21 12Q28 12 28 5Z' fill='%23dfbd72' fill-opacity='.5'/%3E%3Cpath d='M10 25.5Q10 30 14.5 30Q10 30 10 34.5Q10 30 5.5 30Q10 30 10 25.5Z' fill='%23dfbd72' fill-opacity='.38'/%3E%3Ccircle cx='33' cy='33' r='1.2' fill='%23dfbd72' fill-opacity='.4'/%3E%3C/svg%3E") var(--bx, 0) 0 / 0.3em 0.3em, #fdf3d6;
+  -webkit-background-clip: text; background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 0 14px rgba(238, 206, 160, 0.22));
+}
 .wm-ch.cur::after { /* the cursor while the wordmark is being typed */
   content: ""; position: absolute; left: 0.04em; right: 0.04em; bottom: -0.06em; height: 0.05em; border-radius: 1em;
   background: var(--gold); box-shadow: 0 0 10px rgba(253, 227, 145, 0.5);

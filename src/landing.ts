@@ -252,6 +252,10 @@ export function landingScreen(): Screen {
   );
 
   const wordmark = word.parentElement!;
+  // line the "star" pattern up across its letters (each letter's background starts at its own left edge)
+  const alignPattern = () => letters.slice(0, 4).forEach((l) => l.style.setProperty("--bx", `${-l.offsetLeft}px`));
+  document.fonts.ready.then(alignPattern);
+  window.addEventListener("resize", alignPattern);
   if (reduceMotion()) { letters.forEach((l) => l.classList.add("lit")); wordmark.classList.add("typed"); }
   else (async () => {
     // start once the font is in and the page is on screen, or it may finish before anyone sees it
@@ -296,6 +300,7 @@ export function landingScreen(): Screen {
       alive = false;
       window.removeEventListener("resize", onResize);
       document.fonts.removeEventListener("loadingdone", onResize);
+      window.removeEventListener("resize", alignPattern);
       clearTimeout(resizeTimer);
     },
   };
