@@ -61,7 +61,8 @@ async function ensurePlayer(videoId: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const p = new YT.Player(slot, {
       videoId,
-      host: "https://www.youtube-nocookie.com",
+      // the regular player (not youtube-nocookie.com) sees the viewer's YouTube login, so Premium members get no ads
+      host: "https://www.youtube.com",
       playerVars: { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, playsinline: 1, rel: 0 },
       events: {
         onReady: () => { yt = p; resolve(p); },
