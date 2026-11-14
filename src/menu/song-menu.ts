@@ -208,7 +208,7 @@ export async function songMenuScreen(): Promise<Screen> {
       h("button", { class: "sm-close", "aria-label": "Close", onclick: () => close() }),
       art,
       h("div", { class: "sm-drawer-body" },
-        h("p", { class: `sm-drawer-tier ${d.cls}` }, `${d.tier} at ${speed}×`),
+        h("p", { class: `sm-drawer-tier ${d.cls}` }, d.tier),
         h("h2", { class: "sm-drawer-title" }, s.title),
         h("p", { class: "sm-drawer-artist" }, s.artist),
         h("div", { class: "sm-speeds sm-drawer-speeds", role: "group", "aria-label": "Speed" }, ...SPEEDS.map((sp) =>
